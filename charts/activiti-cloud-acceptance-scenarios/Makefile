@@ -12,7 +12,7 @@ build: clean
 	helm lint
 
 install: clean build
-	helm install . --name ${NAME}
+	helm install . --name ${NAME} --namespace ${PREVIEW_NAMESPACE}
 
 upgrade: clean build
 	helm upgrade ${NAME} .
