@@ -23,18 +23,23 @@ pipeline {
       steps {
         container('maven') {
           sh "mvn versions:set -DnewVersion=$PREVIEW_VERSION"
-          dir('charts/preview') {
-            sh "make preview"
-            sh "jx preview --app $APP_NAME --dir ../.."
+          sh "echo $PREVIEW_VERSION"
+          //dir('charts/preview') {
+          //  sh "make preview"
+          //  sh "jx preview --app $APP_NAME --dir ../.."
+          //}
+          dir('charts/activiti-cloud-acceptance-scenarios') {
+            sh "make install" 
+            sh "jx preview --app $APP_NAME --dir ../.. --n $PREVIEW_NAMESPACE " 
           }
-          
+
           // sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
           sh "mvn clean install -DskipTests"
           
-          dir('charts/preview') {
-            sh "make delete"
+         // dir('charts/preview') {
+         //   sh "make delete"
             //sh "jx delete preview --app $APP_NAME"
-          }
+         //}
           
 
           // sh "mvn install"
@@ -44,6 +49,7 @@ pipeline {
         }
       }
     }
+
     stage('Build Release') {
       when {
         branch 'master'
