@@ -32,7 +32,7 @@ pipeline {
           dir('charts/activiti-cloud-acceptance-scenarios') {
             sh "make install" 
           }
-           sh 'sleep 1000'
+           sh 'sleep 300'
           // sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
           sh "mvn clean install -DskipTests"
           
