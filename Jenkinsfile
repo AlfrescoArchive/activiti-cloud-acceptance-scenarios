@@ -23,7 +23,7 @@ pipeline {
       steps {
         container('maven') {
           // sh "mvn versions:set -DnewVersion=$PREVIEW_VERSION"
-          sh "echo \$(jx-release-version) > VERSION"
+
           sh "echo $PREVIEW_VERSION"
           //dir('charts/preview') {
           //  sh "make preview"
