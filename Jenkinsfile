@@ -31,9 +31,9 @@ pipeline {
           //}
           dir('charts/activiti-cloud-acceptance-scenarios') {
             sh "make install" 
-            sh "jx preview --app $APP_NAME --dir ../.. --n $PREVIEW_NAMESPACE " 
           }
 
+           sh 'sleep 1000'
           // sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
           sh "mvn clean install -DskipTests"
           
@@ -41,7 +41,9 @@ pipeline {
          //   sh "make delete"
             //sh "jx delete preview --app $APP_NAME"
          //}
-          
+           dir('charts/activiti-cloud-acceptance-scenarios') {
+            sh "make delete" 
+          }
 
           // sh "mvn install"
           // sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold.yaml"
