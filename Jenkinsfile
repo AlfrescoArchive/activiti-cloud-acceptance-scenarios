@@ -32,7 +32,6 @@ pipeline {
           dir('charts/activiti-cloud-acceptance-scenarios') {
             sh "make install" 
           }
-
            sh 'sleep 1000'
           // sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
           sh "mvn clean install -DskipTests"
@@ -53,28 +52,28 @@ pipeline {
       }
     }
 
-    stage('Build Release') {
-      when {
-        branch 'master'
-      }
-      steps {
-        container('maven') {
-          // ensure we're not on a detached head
-          sh "git checkout master"
-          sh "git config --global credential.helper store"
-          sh "jx step git credentials"
-          sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
+    // stage('Build Release') {
+    //   when {
+    //     branch 'master'
+    //   }
+    //   steps {
+    //     container('maven') {
+    //       // ensure we're not on a detached head
+    //       sh "git checkout master"
+    //       sh "git config --global credential.helper store"
+    //       sh "jx step git credentials"
+    //       sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
  
-          // so we can retrieve the version in later steps
-          // sh "echo \$(jx-release-version) > VERSION"
-          // sh "mvn versions:set -DnewVersion=\$(cat VERSION)"
-          // sh "jx step tag --version \$(cat VERSION)"
-          // sh "mvn clean deploy"
-          // sh "export VERSION=`cat VERSION` && skaffold build -f skaffold.yaml"
-          // sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:\$(cat VERSION)"
-        }
-      }
-    }
+    //       // so we can retrieve the version in later steps
+    //       // sh "echo \$(jx-release-version) > VERSION"
+    //       // sh "mvn versions:set -DnewVersion=\$(cat VERSION)"
+    //       // sh "jx step tag --version \$(cat VERSION)"
+    //       // sh "mvn clean deploy"
+    //       // sh "export VERSION=`cat VERSION` && skaffold build -f skaffold.yaml"
+    //       // sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:\$(cat VERSION)"
+    //     }
+    //   }
+    // }
     // stage('Promote to Environments') {
     //   when {
     //     branch 'master'
