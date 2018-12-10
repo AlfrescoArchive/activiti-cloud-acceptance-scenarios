@@ -16,3 +16,5 @@ else
 endif
 	echo "  version: $(PREVIEW_VERSION)" >> requirements.yaml
 	jx step helm build
+delete:
+	helm delete --purge ${NAME}
