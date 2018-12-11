@@ -30,8 +30,8 @@ pipeline {
             sh "make install" 
           }
             sh 'sleep 120'
-           sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
-          //sh "mvn clean install -DskipTests"
+           //sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
+          sh "mvn clean install -DskipTests"
         }
       }
     }
@@ -61,8 +61,10 @@ pipeline {
   }
   post {
         always {
-           dir('charts/activiti-cloud-acceptance-scenarios') {
-             sh "make delete" 
+          container('maven') {
+            dir('charts/activiti-cloud-acceptance-scenarios') {
+               sh "make delete" 
+            }
           }
           sh "kubectl delete namespace $PREVIEW_NAMESPACE" 
           cleanWs()
