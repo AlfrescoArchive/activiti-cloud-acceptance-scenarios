@@ -9,17 +9,17 @@ pipeline {
     GATEWAY_HOST = "activiti-cloud-gateway.jx-staging.35.228.195.195.nip.io"
     SSO_HOST = "activiti-keycloak.jx-staging.35.228.195.195.nip.io"
     REALM = "activiti"
+    
+    PREVIEW_VERSION = "0.0.0-SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER"
+    PREVIEW_NAMESPACE = "$APP_NAME-$BRANCH_NAME".toLowerCase()
+    HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
   }
   stages {
     stage('CI Build and push snapshot') {
       when {
         branch 'PR-*'
       }
-      environment {
-        PREVIEW_VERSION = "0.0.0-SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER"
-        PREVIEW_NAMESPACE = "$APP_NAME-$BRANCH_NAME".toLowerCase()
-        HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
-      }
+
       steps {
         container('maven') {
           // sh "mvn versions:set -DnewVersion=$PREVIEW_VERSION"
@@ -29,16 +29,9 @@ pipeline {
           //install helm chart for full example
             sh "make install" 
           }
-          //  sh 'sleep 300'
-          // sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
-          sh "mvn clean install -DskipTests"
-          
-          
-
-          // sh "mvn install"
-          // sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold.yaml"
-          // sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:$PREVIEW_VERSION"
-          
+            sh 'sleep 120'
+           sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
+          //sh "mvn clean install -DskipTests"
         }
       }
     }
@@ -62,24 +55,6 @@ pipeline {
     //       // sh "mvn clean deploy"
     //       // sh "export VERSION=`cat VERSION` && skaffold build -f skaffold.yaml"
     //       // sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:\$(cat VERSION)"
-    //     }
-    //   }
-    // }
-    // stage('Promote to Environments') {
-    //   when {
-    //     branch 'master'
-    //   }
-    //   steps {
-    //     container('maven') {
-    //       dir('charts/activiti-cloud-acceptance-scenarios') {
-    //         sh "jx step changelog --version v\$(cat ../../VERSION)"
-
-    //         // release the helm chart
-    //         sh "jx step helm release"
-
-    //         // promote through all 'Auto' promotion Environments
-    //         sh "jx promote -b --all-auto --timeout 1h --version \$(cat ../../VERSION)"
-    //       }
     //     }
     //   }
     // }
