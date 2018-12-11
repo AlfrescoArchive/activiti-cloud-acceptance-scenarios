@@ -36,12 +36,12 @@ pipeline {
       }
     }
 
-    // stage('Build Release') {
-    //   when {
-    //     branch 'master'
-    //   }
-    //   steps {
-    //     container('maven') {
+     stage('Build Release') {
+       when {
+         branch 'master'
+       }
+       steps {
+         container('maven') {
     //       // ensure we're not on a detached head
     //       sh "git checkout master"
     //       sh "git config --global credential.helper store"
@@ -55,9 +55,9 @@ pipeline {
     //       // sh "mvn clean deploy"
     //       // sh "export VERSION=`cat VERSION` && skaffold build -f skaffold.yaml"
     //       // sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:\$(cat VERSION)"
-    //     }
-    //   }
-    // }
+         }
+      }
+     }
   }
   post {
         always {
