@@ -64,6 +64,7 @@ pipeline {
            dir('charts/activiti-cloud-acceptance-scenarios') {
              sh "make delete" 
           }
+          sh "kubectl delete namespace $PREVIEW_NAMESPACE" 
           cleanWs()
         }
   }
