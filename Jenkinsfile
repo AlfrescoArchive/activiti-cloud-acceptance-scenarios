@@ -29,9 +29,9 @@ pipeline {
           //install helm chart for full example
             sh "make install" 
           }
-            sh 'sleep 120'
-           //sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
-          sh "mvn clean install -DskipTests"
+          sh 'sleep 120'
+          sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
+          //sh "mvn clean install -DskipTests"
         }
       }
     }
@@ -51,17 +51,9 @@ pipeline {
            sh "git checkout master"
            sh "git config --global credential.helper store"
            sh "jx step git credentials"
-           sh "mvn clean install -DskipTests"
-           //sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
- 
-    //       // so we can retrieve the version in later steps
-    //       // sh "echo \$(jx-release-version) > VERSION"
-    //       // sh "mvn versions:set -DnewVersion=\$(cat VERSION)"
-    //       // sh "jx step tag --version \$(cat VERSION)"
-    //       // sh "mvn clean deploy"
-    //       // sh "export VERSION=`cat VERSION` && skaffold build -f skaffold.yaml"
-    //       // sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:\$(cat VERSION)"
-         }
+           //sh "mvn clean install -DskipTests"
+           sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
+          }
       }
      }
   }
