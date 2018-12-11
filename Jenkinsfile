@@ -25,24 +25,15 @@ pipeline {
           // sh "mvn versions:set -DnewVersion=$PREVIEW_VERSION"
 
           sh "echo $PREVIEW_VERSION"
-          //dir('charts/preview') {
-          //  sh "make preview"
-          //  sh "jx preview --app $APP_NAME --dir ../.."
-          //}
           dir('charts/activiti-cloud-acceptance-scenarios') {
+          //install helm chart for full example
             sh "make install" 
           }
           //  sh 'sleep 300'
           // sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
           sh "mvn clean install -DskipTests"
           
-         // dir('charts/preview') {
-         //   sh "make delete"
-            //sh "jx delete preview --app $APP_NAME"
-         //}
-           dir('charts/activiti-cloud-acceptance-scenarios') {
-            sh "make delete" 
-          }
+          
 
           // sh "mvn install"
           // sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold.yaml"
@@ -95,6 +86,9 @@ pipeline {
   }
   post {
         always {
+           dir('charts/activiti-cloud-acceptance-scenarios') {
+             sh "make delete" 
+          }
           cleanWs()
         }
   }
