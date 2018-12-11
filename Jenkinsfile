@@ -42,11 +42,17 @@ pipeline {
        }
        steps {
          container('maven') {
-    //       // ensure we're not on a detached head
-    //       sh "git checkout master"
-    //       sh "git config --global credential.helper store"
-    //       sh "jx step git credentials"
-    //       sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
+          dir('charts/activiti-cloud-acceptance-scenarios') {
+          //install helm chart for full example
+            sh "make install" 
+          }
+            sh 'sleep 120'
+           // ensure we're not on a detached head
+           sh "git checkout master"
+           sh "git config --global credential.helper store"
+           sh "jx step git credentials"
+           sh "mvn clean install -DskipTests"
+           //sh "mvn clean install -DskipTests && mvn -pl '!apps-acceptance-tests,!multiple-runtime-acceptance-tests,!security-policies-acceptance-tests' clean verify"
  
     //       // so we can retrieve the version in later steps
     //       // sh "echo \$(jx-release-version) > VERSION"
