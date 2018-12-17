@@ -11,7 +11,7 @@ pipeline {
     REALM = "activiti"
     
     PREVIEW_VERSION = "0.0.0-SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER"
-    PREVIEW_NAMESPACE = "$APP_NAME-$BRANCH_NAME".toLowerCase()
+    PREVIEW_NAMESPACE = "$APP_NAME-$BRANCH_NAME-$BUILD_NUMBER".toLowerCase()
     HELM_RELEASE_NAME = "scenarios-$BRANCH_NAME-$BUILD_NUMBER".toLowerCase()
   }
   stages {
