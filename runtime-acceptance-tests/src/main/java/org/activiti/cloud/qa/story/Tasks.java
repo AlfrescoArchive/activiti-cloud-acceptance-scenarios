@@ -234,8 +234,9 @@ public class Tasks {
         auditSteps.checkTaskUpdatedEvent(newTask.getId());
     }
     
-    @Then("the process $processInstanceId will have $numberRootTasks root tasks")
-    public void checkNumberOfRootTasks(String processInstanceId,Integer numberRootTasks){
+    @Then("the user will see $numberRootTasks root task for the process")
+    public void checkNumberOfRootTasks(Integer numberRootTasks){
+        String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
         Collection <CloudTask> rootTasksCollection = taskQuerySteps.getRootTasksByProcessInstance(processInstanceId).getContent();
         
         assertThat(rootTasksCollection).isNotNull();
