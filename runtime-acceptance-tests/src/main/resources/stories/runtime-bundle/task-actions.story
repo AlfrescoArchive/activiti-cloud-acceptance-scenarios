@@ -119,3 +119,7 @@ And the user updates the updatable fields of the task
 Then the task is updated
 And the task has the updated fields
 
+Scenario: check root tasks for the process TWO_TASK_PROCESS
+Given the user is authenticated as testuser
+When the user starts an instance of the process called TWO_TASK_PROCESS
+Then the process TWO_TASK_PROCESS will have 2 root tasks
