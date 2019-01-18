@@ -16,11 +16,17 @@
 
 package org.activiti.cloud.qa.steps;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import net.thucydides.core.annotations.Step;
+import org.activiti.cloud.organization.api.Extensions;
 import org.activiti.cloud.organization.api.Model;
+import org.activiti.cloud.organization.api.ProcessVariable;
 import org.activiti.cloud.qa.config.ModelingTestsConfigurationProperties;
 import org.activiti.cloud.qa.model.modeling.EnableModelingContext;
 import org.activiti.cloud.qa.service.ModelingModelsService;
@@ -47,25 +53,75 @@ public class ModelingModelsSteps extends ModelingContextSteps<Model> {
 
     @Step
     public Resource<Model> create(String modelName,
-                                  String modelType) {
+                                  String modelType,
+                                  List<String> processVariables) {
         String id = UUID.randomUUID().toString();
         Model model = mock(Model.class);
         doReturn(id).when(model).getId();
         doReturn(modelType.toUpperCase()).when(model).getType();
         doReturn(modelName).when(model).getName();
+        if (processVariables != null) {
+            Extensions extensions = new Extensions();
+            extensions.setProcessVariables(
+                    processVariables
+                            .stream()
+                            .collect(Collectors.toMap(Function.identity(),
+                                                      this::toBooleanProcessVariable)));
+            doReturn(extensions).when(model).getExtensions();
+        }
         return create(id,
                       model);
     }
 
+    private ProcessVariable toBooleanProcessVariable(String name) {
+        ProcessVariable processVariable = new ProcessVariable();
+        processVariable.setName(name);
+        processVariable.setId(name);
+        processVariable.setType("boolean");
+        processVariable.setValue("true");
+        return processVariable;
+    }
+
     @Step
-    public void editAndSaveCurrentModel() {
+    public void removeProcessVariableInCurrentModel(String processVariable) {
+        Resource<Model> currentContext = checkAndGetCurrentContext(Model.class);
+        assertThat(currentContext.getContent()).isInstanceOf(Model.class);
+        Model model = currentContext.getContent();
+
+        Optional.ofNullable(model.getExtensions())
+                .map(Extensions::getProcessVariables)
+                .ifPresent(processVariables -> processVariables.remove(processVariable));
+    }
+
+    @Step
+    public void addProcessVariableInCurrentModel(String processVariable) {
+        Resource<Model> currentContext = checkAndGetCurrentContext(Model.class);
+        assertThat(currentContext.getContent()).isInstanceOf(Model.class);
+        Model model = currentContext.getContent();
+
+        if (model.getExtensions() == null) {
+            model.setExtensions(new Extensions());
+        }
+        Extensions extensions = model.getExtensions();
+        if (extensions.getProcessVariables() == null) {
+            extensions.setProcessVariables(new HashMap<>());
+        }
+        extensions.getProcessVariables().put(processVariable,
+                                             toBooleanProcessVariable(processVariable));
+    }
+
+    @Step
+    public void saveCurrentModel(boolean updateContent) {
         Resource<Model> currentContext = checkAndGetCurrentContext(Model.class);
         assertThat(currentContext.getContent()).isInstanceOf(Model.class);
 
         Model model = currentContext.getContent();
-        model.setContent("updated content");
+        if (updateContent) {
+            model.setContent("updated content");
+        }
 
-        modelingModelsService.updateByUri(currentContext.getLink(REL_SELF).getHref().replace("http://activiti-cloud-modeling-backend", config.getModelingUrl()),
+        modelingModelsService.updateByUri(currentContext.getLink(REL_SELF).getHref().replace("http://activiti-cloud-modeling-backend",
+                                                                                             config.getModelingUrl()),
                                           model);
         updateCurrentModelingObject();
     }
@@ -75,6 +131,14 @@ public class ModelingModelsSteps extends ModelingContextSteps<Model> {
         Resource<Model> currentContext = checkAndGetCurrentContext(Model.class);
         Model model = currentContext.getContent();
         assertThat(model.getVersion()).isEqualTo(expectedModelVersion);
+    }
+
+    @Step
+    public void checkCurrentModelContainsVariables(List<String> processVariables) {
+        Resource<Model> currentContext = checkAndGetCurrentContext(Model.class);
+        Model model = currentContext.getContent();
+        assertThat(model.getExtensions()).isNotNull();
+        assertThat(model.getExtensions().getProcessVariables()).containsKeys(processVariables.toArray(new String[0]));
     }
 
     @Override

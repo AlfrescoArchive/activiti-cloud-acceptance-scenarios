@@ -91,6 +91,12 @@ public class ModelingProjects {
         modelingProjectsSteps.openModelingObject(projectNamed(projectName));
     }
 
+    @When("the user opens the existing project '$projectName'")
+    public void openExistingProject(String projectName) {
+        ensureProjectExists(projectName);
+        openProject(projectName);
+    }
+
     @Then("the project '$projectName' is deleted")
     public void checkProjectNotFound(String projectName) {
         modelingProjectsSteps.checkProjectNotFound(projectNamed(projectName));
@@ -126,7 +132,8 @@ public class ModelingProjects {
                                                           getModelType(modelType).getContentFileExtension()))
                     .map(file -> modelingProjectsSteps.importModelInCurrentProject(file))
                     .orElseGet(() -> modelingModelsSteps.create(modelName,
-                                                                modelType));
+                                                                modelType,
+                                                                null));
         }
     }
 
