@@ -130,6 +130,8 @@
         <version>${maven-compiler-plugin.version}</version>
         <configuration>
           <release>${java.version}</release>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
           <showDeprecation>true</showDeprecation>
           <showWarnings>true</showWarnings>
           <optimize>true</optimize>
@@ -155,6 +157,7 @@
             <include>**/*Tests.java</include>
             <include>**/*TestSuite.java</include>
           </includes>
+          <forkCount>0</forkCount>
         </configuration>
         <executions>
           <execution>
