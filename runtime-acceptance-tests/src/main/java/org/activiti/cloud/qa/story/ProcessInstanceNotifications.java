@@ -21,8 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
-import net.serenitybdd.core.Serenity;
-import net.thucydides.core.annotations.Steps;
 import org.activiti.api.process.model.ProcessInstance;
 import org.activiti.cloud.acc.core.steps.notifications.NotificationsSteps;
 import org.activiti.cloud.acc.core.steps.query.ProcessQuerySteps;
@@ -31,6 +29,9 @@ import org.activiti.cloud.acc.shared.model.AuthToken;
 import org.activiti.cloud.acc.shared.rest.TokenHolder;
 import org.jbehave.core.annotations.Then;
 import org.jbehave.core.annotations.When;
+
+import net.serenitybdd.core.Serenity;
+import net.thucydides.core.annotations.Steps;
 import reactor.core.publisher.ReplayProcessor;
 
 public class ProcessInstanceNotifications {
@@ -54,11 +55,11 @@ public class ProcessInstanceNotifications {
     }
     
     @When("the user starts a process with notifications called $processName")
-    public void startProcess(String processName) throws IOException {
+    public void startProcess(String processName) throws IOException, InterruptedException {
 
         AuthToken authToken = TokenHolder.getAuthToken();
          
-        data=notificationsSteps.subscribe("activiti-cloud-gateway.35.241.237.111.nip.io","80",authToken.getAccess_token());
+        data = notificationsSteps.subscribe(authToken.getAccess_token());
         
         processInstance = processRuntimeBundleSteps.startProcess(processDefinitionKeyMatcher(processName),true);
 
@@ -81,7 +82,7 @@ public class ProcessInstanceNotifications {
     @Then("notifications are received")
     public void verifyNotifications() throws Exception {
         String processId = Serenity.sessionVariableCalled("processInstanceId");
-        notificationsSteps.verifySubscribe(data);
+        notificationsSteps.verifyData(data);
     }
     
 
