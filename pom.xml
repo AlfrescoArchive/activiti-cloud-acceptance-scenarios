@@ -133,6 +133,8 @@
           <showDeprecation>true</showDeprecation>
           <showWarnings>true</showWarnings>
           <optimize>true</optimize>
+          <!-- See https://stackoverflow.com/questions/46878649/maven-compilation-issue-with-java-9 -->
+          <forceJavacCompilerUse>true</forceJavacCompilerUse> 
         </configuration>
       </plugin>
       <plugin>
