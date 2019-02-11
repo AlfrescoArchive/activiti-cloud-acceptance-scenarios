@@ -47,7 +47,7 @@ public class ProcessInstanceVariables {
                 assertThat(variableName1).isNotNull();
                 assertThat(variableName2).isNotNull();
             
-                Resources<CloudVariableInstance> cloudVariableInstanceResource = getProcessVariables(processInstanceId);
+                final Resources<CloudVariableInstance> cloudVariableInstanceResource = getProcessVariables(processInstanceId);
                 
                 assertThat(cloudVariableInstanceResource).isNotNull();
                 assertThat(cloudVariableInstanceResource).isNotEmpty();
@@ -84,7 +84,7 @@ public class ProcessInstanceVariables {
             assertThat(variableName).isNotNull();
             final Resources<CloudVariableInstance> variableInstances = getProcessVariables(processInstanceId);
             if (variableInstances!=null) {
-                assertThat(variableInstances).extracting(VariableInstance::getName).doesNotContain(variableName);
+                assertThat(variableInstances.getContent()).extracting(VariableInstance::getName).doesNotContain(variableName);
             }
         });
     }
@@ -100,7 +100,7 @@ public class ProcessInstanceVariables {
             assertThat(variableInstances).isNotNull();
             assertThat(variableInstances).isNotEmpty();
             //one of the variables should have name matching variableName
-            assertThat(variableInstances).extracting(VariableInstance::getName).contains(variableName);
+            assertThat(variableInstances.getContent()).extracting(VariableInstance::getName).contains(variableName);
         });
     }
     
