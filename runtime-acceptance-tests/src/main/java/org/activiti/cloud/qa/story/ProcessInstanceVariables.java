@@ -64,6 +64,7 @@ public class ProcessInstanceVariables {
     }
 
     @Then("the process variable $variableName is deleted")
+    @When("the process variable $variableName is deleted")
     public void verifyVariableDeleted(String variableName) {
         String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
 
@@ -79,6 +80,7 @@ public class ProcessInstanceVariables {
     }
     
     @Then("the process variable $variableName is created")
+    @When("the process variable $variableName is created")
     public void verifyVariableCreated(String variableName) {
         String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
 

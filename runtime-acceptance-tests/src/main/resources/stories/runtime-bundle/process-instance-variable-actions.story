@@ -2,7 +2,7 @@ Meta:
 
 Narrative:
 As a user
-I want to perform operations on process instances
+I want to perform operations on process instance variables
 
 Scenario: admin update process instance variables
 Given the user is authenticated as hradmin
