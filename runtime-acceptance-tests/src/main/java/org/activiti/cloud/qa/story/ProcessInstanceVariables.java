@@ -17,9 +17,11 @@
 package org.activiti.cloud.qa.story;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import net.serenitybdd.core.Serenity;
 import net.thucydides.core.annotations.Steps;
+import org.activiti.api.model.shared.model.VariableInstance;
 import org.activiti.api.process.model.builders.ProcessPayloadBuilder;
 import org.activiti.api.process.model.payloads.SetProcessVariablesPayload;
 import org.activiti.cloud.acc.core.steps.runtime.ProcessRuntimeBundleSteps;
@@ -38,65 +40,72 @@ public class ProcessInstanceVariables {
 
     @Then("variable $variableName1 has value $value1 and $variableName2 has value $value2")
     public void checkProcessInstanceVariables(String variableName1, String value1, String variableName2, String value2) {
-        String variableName,actualValue;
-        boolean found1,found2;
+        
         String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
-        Resources<CloudVariableInstance> cloudVariableInstanceResource = getProcessVariables(processInstanceId);
         
-        found1 = found2 = false;
-        
-        for (CloudVariableInstance cloudVariableInstance : cloudVariableInstanceResource.getContent()) {
-            variableName = cloudVariableInstance.getName();
-            actualValue = cloudVariableInstance.getValue();
-            if (variableName.equals(variableName1)) {
-                assertThat(value1).isEqualTo(actualValue);
-                found1=true;
-            } else {
-                if (variableName.equals(variableName2)) {
-                    assertThat(value2).isEqualTo(actualValue);
-                    found2 = true;
+        await().untilAsserted(() -> {
+                assertThat(variableName1).isNotNull();
+                assertThat(variableName2).isNotNull();
+            
+                Resources<CloudVariableInstance> cloudVariableInstanceResource = getProcessVariables(processInstanceId);
+                
+                assertThat(cloudVariableInstanceResource).isNotNull();
+                assertThat(cloudVariableInstanceResource).isNotEmpty();
+                
+                String variableName,actualValue;
+                boolean found1,found2;
+                found1 = found2 = false;
+                
+                for (CloudVariableInstance cloudVariableInstance : cloudVariableInstanceResource.getContent()) {
+                    variableName = cloudVariableInstance.getName();
+                    actualValue = cloudVariableInstance.getValue();
+                    if (variableName.equals(variableName1)) {
+                        assertThat(value1).isEqualTo(actualValue);
+                        found1=true;
+                    } else {
+                        if (variableName.equals(variableName2)) {
+                            assertThat(value2).isEqualTo(actualValue);
+                            found2 = true;
+                        }
+                    }
                 }
-            }
-        }
-        
-        assertThat(found1).isEqualTo(true);
-        assertThat(found2).isEqualTo(true);
+                
+                assertThat(found1).isEqualTo(true);
+                assertThat(found2).isEqualTo(true);
+        });       
     }
 
     @Then("the process variable $variableName is deleted")
     @When("the process variable $variableName is deleted")
-    public void verifyVariableDeleted(String variableName) {
+    public void verifyProcessVariableDeleted(String variableName) {
         String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
 
-        Resources<CloudVariableInstance> cloudVariableInstanceResource = getProcessVariables(processInstanceId);
-        boolean found = false;
-        for (CloudVariableInstance cloudVariableInstance : cloudVariableInstanceResource.getContent()) {
-            if (cloudVariableInstance.getName().equals(variableName)) {
-                found = true;
-                break;
-            } 
-        }
-        assertThat(found).isEqualTo(false);
+        await().untilAsserted(() -> {
+            assertThat(variableName).isNotNull();
+            final Resources<CloudVariableInstance> variableInstances = getProcessVariables(processInstanceId);
+            if (variableInstances!=null) {
+                assertThat(variableInstances).extracting(VariableInstance::getName).doesNotContain(variableName);
+            }
+        });
     }
     
     @Then("the process variable $variableName is created")
     @When("the process variable $variableName is created")
-    public void verifyVariableCreated(String variableName) {
+    public void verifyProcessVariableCreated(String variableName) {
         String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
-
-        Resources<CloudVariableInstance> cloudVariableInstanceResource = getProcessVariables(processInstanceId);
-        boolean found = false;
-        for (CloudVariableInstance cloudVariableInstance : cloudVariableInstanceResource.getContent()) {
-            if (cloudVariableInstance.getName().equals(variableName)) {
-                found = true;
-                break;
-            } 
-        }
-        assertThat(found).isEqualTo(true);
+       
+        await().untilAsserted(() -> {
+            assertThat(variableName).isNotNull();
+            final Resources<CloudVariableInstance> variableInstances = getProcessVariables(processInstanceId);
+            assertThat(variableInstances).isNotNull();
+            assertThat(variableInstances).isNotEmpty();
+            //one of the variables should have name matching variableName
+            assertThat(variableInstances).extracting(VariableInstance::getName).contains(variableName);
+        });
     }
     
     @When("the user set the instance variable $variableName1 with value $value1")
-    public void setVariables(String variableName1, String value1) {
+    public void setProcessVariables(String variableName1, String value1) {
         String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
         
         SetProcessVariablesPayload setProcessVariablesPayload = ProcessPayloadBuilder
