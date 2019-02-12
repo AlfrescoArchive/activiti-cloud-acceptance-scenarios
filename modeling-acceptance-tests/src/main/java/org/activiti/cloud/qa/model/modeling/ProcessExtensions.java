@@ -25,11 +25,15 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableMap;
 import org.activiti.cloud.organization.api.Extensions;
 import org.activiti.cloud.organization.api.ProcessVariable;
-import org.activiti.cloud.organization.api.VariableMappingType;
+import org.activiti.cloud.organization.api.ProcessVariableMapping;
+import org.activiti.cloud.organization.api.ServiceTaskActionType;
 
 import static java.util.Collections.singletonMap;
-import static org.activiti.cloud.organization.api.VariableMappingType.INPUTS;
-import static org.activiti.cloud.organization.api.VariableMappingType.OUTPUTS;
+import static java.util.stream.Collectors.toMap;
+import static org.activiti.cloud.organization.api.ServiceTaskActionType.INPUTS;
+import static org.activiti.cloud.organization.api.ServiceTaskActionType.OUTPUTS;
+import static org.activiti.cloud.organization.api.VariableMappingType.VALUE;
+import static org.activiti.cloud.organization.api.VariableMappingType.VARIABLE;
 
 /**
  * Modeling utils
@@ -37,6 +41,8 @@ import static org.activiti.cloud.organization.api.VariableMappingType.OUTPUTS;
 public class ProcessExtensions {
 
     public static final String EXTENSIONS_TASK_NAME = "ServiceTask";
+
+    public static final String HOST_VALUE = "${host}";
 
     public static Extensions extensions(String... processVariables) {
         return extensions(Arrays.asList(processVariables));
@@ -56,16 +62,18 @@ public class ProcessExtensions {
                                           ProcessExtensions::toProcessVariable));
     }
 
-    public static Map<String, Map<VariableMappingType, Map<String, String>>> variableMappings(Collection<String> processVariables) {
-        Map<String, String> autoMapping = processVariables
-                .stream()
-                .collect(Collectors.toMap(Function.identity(),
-                                          Function.identity()));
+    public static Map<String, Map<ServiceTaskActionType, Map<String, ProcessVariableMapping>>> variableMappings(Collection<String> processVariables) {
         return singletonMap(EXTENSIONS_TASK_NAME,
                             ImmutableMap.of(INPUTS,
-                                            autoMapping,
+                                            processVariables
+                                                    .stream()
+                                                    .collect(toMap(Function.identity(),
+                                                                   ProcessExtensions::toFixedProcessVariableMapping)),
                                             OUTPUTS,
-                                            autoMapping));
+                                            processVariables
+                                                    .stream()
+                                                    .collect(toMap(Function.identity(),
+                                                                   ProcessExtensions::toVariableProcessVariableMapping))));
     }
 
     public static ProcessVariable toProcessVariable(String name) {
@@ -75,5 +83,19 @@ public class ProcessExtensions {
         processVariable.setType("boolean");
         processVariable.setValue("true");
         return processVariable;
+    }
+
+    public static ProcessVariableMapping toFixedProcessVariableMapping(String name) {
+        ProcessVariableMapping processVariableMapping = new ProcessVariableMapping();
+        processVariableMapping.setType(VALUE);
+        processVariableMapping.setValue(name);
+        return processVariableMapping;
+    }
+
+    public static ProcessVariableMapping toVariableProcessVariableMapping(String name) {
+        ProcessVariableMapping processVariableMapping = new ProcessVariableMapping();
+        processVariableMapping.setType(VARIABLE);
+        processVariableMapping.setValue(HOST_VALUE);
+        return processVariableMapping;
     }
 }

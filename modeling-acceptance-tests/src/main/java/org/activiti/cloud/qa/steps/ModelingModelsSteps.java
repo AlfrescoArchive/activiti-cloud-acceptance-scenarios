@@ -16,6 +16,7 @@
 
 package org.activiti.cloud.qa.steps;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,15 +26,20 @@ import java.util.Set;
 import net.thucydides.core.annotations.Step;
 import org.activiti.cloud.organization.api.Extensions;
 import org.activiti.cloud.organization.api.Model;
+import org.activiti.cloud.organization.api.ProcessVariableMapping;
+import org.activiti.cloud.organization.api.ServiceTaskActionType;
 import org.activiti.cloud.qa.config.ModelingTestsConfigurationProperties;
 import org.activiti.cloud.qa.model.modeling.EnableModelingContext;
 import org.activiti.cloud.qa.service.ModelingModelsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 
-import static org.activiti.cloud.organization.api.VariableMappingType.INPUTS;
-import static org.activiti.cloud.organization.api.VariableMappingType.OUTPUTS;
+import static org.activiti.cloud.organization.api.ServiceTaskActionType.INPUTS;
+import static org.activiti.cloud.organization.api.ServiceTaskActionType.OUTPUTS;
+import static org.activiti.cloud.organization.api.VariableMappingType.VALUE;
+import static org.activiti.cloud.organization.api.VariableMappingType.VARIABLE;
 import static org.activiti.cloud.qa.model.modeling.ProcessExtensions.EXTENSIONS_TASK_NAME;
+import static org.activiti.cloud.qa.model.modeling.ProcessExtensions.HOST_VALUE;
 import static org.activiti.cloud.qa.model.modeling.ProcessExtensions.extensions;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -147,8 +153,34 @@ public class ModelingModelsSteps extends ModelingContextSteps<Model> {
         assertThat(model.getExtensions().getVariablesMappings()).containsKeys(EXTENSIONS_TASK_NAME);
         assertThat(model.getExtensions().getVariablesMappings().get(EXTENSIONS_TASK_NAME)).containsKeys(INPUTS,
                                                                                                         OUTPUTS);
-        assertThat(model.getExtensions().getVariablesMappings().get(EXTENSIONS_TASK_NAME).get(INPUTS)).containsKeys(processVariables);
-        assertThat(model.getExtensions().getVariablesMappings().get(EXTENSIONS_TASK_NAME).get(OUTPUTS)).containsKeys(processVariables);
+        assertProcessVariableMappings(model,
+                                      INPUTS,
+                                      processVariables);
+
+        assertProcessVariableMappings(model,
+                                      OUTPUTS,
+                                      processVariables);
+    }
+
+    private void assertProcessVariableMappings(Model model,
+                                               ServiceTaskActionType serviceTaskActionType,
+                                               String... processVariables) {
+        Map<String, ProcessVariableMapping> outputsMappings = model
+                .getExtensions()
+                .getVariablesMappings()
+                .get(EXTENSIONS_TASK_NAME)
+                .get(serviceTaskActionType);
+
+        assertThat(outputsMappings).containsKeys(processVariables);
+        Arrays.stream(processVariables).forEach(
+                processVariable -> assertThat(Optional.ofNullable(outputsMappings.get(processVariable)))
+                        .hasValueSatisfying(processVariableMapping -> {
+                            assertThat(processVariableMapping.getType())
+                                    .isEqualTo(serviceTaskActionType == INPUTS ? VALUE : VARIABLE);
+                            assertThat(processVariableMapping.getValue())
+                                    .isEqualTo(serviceTaskActionType == INPUTS ? processVariable : HOST_VALUE);
+                        })
+        );
     }
 
     @Override
