@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export REALM=activiti
+export REALM=alfresco
 export SSO_PROTOCOL=${SSO_PROTOCOL:-http}
 export SSO_HOST=${SSO_HOST:-activiti-keycloak.jx-staging.35.228.195.195.nip.io}
 export GATEWAY_PROTOCOL=${GATEWAY_PROTOCOL:-http}

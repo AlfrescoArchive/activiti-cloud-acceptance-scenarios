@@ -3,10 +3,28 @@
 
 This repo now includes a set of modules which contains different acceptances tests. This acceptance tests rely on having an environment to run against.
 
-In order to point to an environment you can export the following *ENVIROMENT VARIABLES*
+## Installing the app
+
+
+You can use our HELM charts hosted here: [Activiti Cloud HELM Charts](https://github.com/Activiti/activiti-cloud-charts/tree/master/activiti-cloud-full-example) to create these environments
+with all the services that are tested by these acceptance tests.
+
+
+## Typical configuration
+
+In order to point to an environment you can export the following *ENVIROMENT VARIABLE*
 
 ```
 > export GATEWAY_HOST=<custom-gateway-host>:<custom-gateway-port>
+```
+
+You can find the host from `kubectl get ingress`
+
+## Non-typical configuration
+
+If SSO is on a different host or using a non-default realm then also set:
+
+```
 > export SSO_HOST=<custom-sso-host>:<custom-sso-port>
 > export REALM=activiti
 ```
@@ -23,9 +41,7 @@ or specify the full URL:
 > export SSO_URL=<custom-sso-url>
 ```
 
-You can use our HELM charts hosted here: [Activiti Cloud HELM Charts](https://github.com/Activiti/activiti-cloud-charts/tree/master/activiti-cloud-full-example) to create these environments
-with all the services that are tested by these acceptance tests.
-
+## Running Tests
 
 In order to run these acceptance tests you can run: 
 
