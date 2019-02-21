@@ -310,9 +310,11 @@ public class Tasks {
     @Then("task variables are visible in rb and query")
     public void checkTaskVariablesAreTheSameInRBAndQuery(){
         assertThat(taskRuntimeBundleSteps
-                    .getVariables(newTask.getId()))
+                    .getVariables(newTask.getId())
+                        .getContent())
             .isEqualTo(taskQuerySteps
-                    .getVariables(newTask.getId()));
+                    .getVariables(newTask.getId())
+                        .getContent());
     }
 
 
