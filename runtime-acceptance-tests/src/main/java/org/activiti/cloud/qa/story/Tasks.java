@@ -18,11 +18,7 @@ package org.activiti.cloud.qa.story;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import net.serenitybdd.core.Serenity;
 import net.thucydides.core.annotations.Steps;
@@ -301,5 +297,24 @@ public class Tasks {
             assertThat(task.getDescription()).contains(newTask.getDescription().substring(0,2));
         }
     }
+
+    @When("the user sets task variables")
+    public void setTaskVariables(){
+        Map <String,Object> variables = new HashMap<>();
+        variables.put("var1", "one");
+        variables.put("var2", 2);
+
+        taskRuntimeBundleSteps.setVariables(newTask.getId(), variables);
+    }
+
+    @Then("task variables are visible in rb and query")
+    public void checkTaskVariablesAreTheSameInRBAndQuery(){
+        assertThat(taskRuntimeBundleSteps
+                    .getVariables(newTask.getId()))
+            .isEqualTo(taskQuerySteps
+                    .getVariables(newTask.getId()));
+    }
+
+
    
 }
