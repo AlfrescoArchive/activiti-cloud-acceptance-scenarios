@@ -16,10 +16,6 @@
 
 package org.activiti.cloud.qa.story;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.*;
-
 import net.serenitybdd.core.Serenity;
 import net.thucydides.core.annotations.Steps;
 import org.activiti.api.model.shared.event.VariableEvent;
@@ -35,10 +31,15 @@ import org.activiti.cloud.acc.core.steps.runtime.TaskRuntimeBundleSteps;
 import org.activiti.cloud.acc.core.steps.runtime.admin.ProcessRuntimeAdminSteps;
 import org.activiti.cloud.acc.core.steps.runtime.admin.TaskRuntimeAdminSteps;
 import org.activiti.cloud.api.task.model.CloudTask;
+import org.activiti.cloud.qa.helpers.VariableGenerator;
 import org.jbehave.core.annotations.Given;
 import org.jbehave.core.annotations.Then;
 import org.jbehave.core.annotations.When;
 import org.springframework.hateoas.PagedResources;
+
+import java.util.*;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class Tasks {
 
@@ -300,23 +301,28 @@ public class Tasks {
 
     @When("the user sets task variables")
     public void setTaskVariables(){
-        Map <String,Object> variables = new HashMap<>();
-        variables.put("var1", "one");
-        variables.put("var2", 2);
-
-        taskRuntimeBundleSteps.setVariables(newTask.getId(), variables);
+        taskRuntimeBundleSteps.setVariables(newTask.getId(), VariableGenerator.variables);
     }
 
     @Then("task variables are visible in rb and query")
     public void checkTaskVariablesAreTheSameInRBAndQuery(){
-        assertThat(taskRuntimeBundleSteps
-                    .getVariables(newTask.getId())
-                        .getContent())
-            .isEqualTo(taskQuerySteps
-                    .getVariables(newTask.getId())
-                        .getContent());
+
+        Map <String,Object> generatedMapRuntime = new HashMap<>();
+        Map <String,Object> generatedMapQuery = new HashMap<>();
+
+        taskRuntimeBundleSteps
+                .getVariables(newTask.getId())
+                .getContent()
+                .stream()
+                .forEach(element -> generatedMapRuntime.put(element.getName(),element.getValue()));
+
+        taskQuerySteps
+                .getVariables(newTask.getId())
+                .getContent()
+                .stream()
+                .forEach(element -> generatedMapQuery.put(element.getName(),element.getValue()));
+
+        assertThat(generatedMapRuntime).isEqualTo(VariableGenerator.variables);
+        assertThat(generatedMapQuery).isEqualTo(VariableGenerator.variables);
     }
-
-
-   
 }
