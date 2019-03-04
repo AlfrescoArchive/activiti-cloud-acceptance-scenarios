@@ -48,6 +48,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class Tasks {
 
+    public static final String STAND_ALONE_TASK_ID = "standAloneTaskId";
+
     @Steps
     private ProcessRuntimeBundleSteps processRuntimeBundleSteps;
     @Steps
@@ -86,6 +88,7 @@ public class Tasks {
     public void createTask() throws Exception {
         newTask = taskRuntimeBundleSteps.createNewTask();
         assertThat(newTask).isNotNull();
+        Serenity.setSessionVariable(STAND_ALONE_TASK_ID).to(newTask.getId());
     }
 
     @Then("the task is created and the status is assigned")
