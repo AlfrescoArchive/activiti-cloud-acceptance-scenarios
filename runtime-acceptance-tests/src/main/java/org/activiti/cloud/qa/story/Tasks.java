@@ -16,6 +16,13 @@
 
 package org.activiti.cloud.qa.story;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import net.serenitybdd.core.Serenity;
 import net.thucydides.core.annotations.Steps;
 import org.activiti.api.model.shared.event.VariableEvent;
@@ -36,8 +43,6 @@ import org.jbehave.core.annotations.Given;
 import org.jbehave.core.annotations.Then;
 import org.jbehave.core.annotations.When;
 import org.springframework.hateoas.PagedResources;
-
-import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -179,12 +184,14 @@ public class Tasks {
 
     }
 
-    @Then("we set task variable $variableName to $variableValue")
-    @When("we set task variable $variableName to $variableValue")
-    public void setTaskVariableValue(String variableName, String variableValue) throws Exception {
+    @Then("we update task variable $variableName to $variableValue")
+    @When("we update task variable $variableName to $variableValue")
+    public void updateTaskVariableValue(String variableName, String variableValue) {
         newTask = obtainFirstTaskFromProcess();
 
-        taskRuntimeBundleSteps.setVariables(newTask.getId(), Collections.singletonMap(variableName,variableValue));
+        taskRuntimeBundleSteps.updateVariable(newTask.getId(),
+                                              variableName,
+                                              variableValue);
 
     }
 
@@ -192,7 +199,7 @@ public class Tasks {
     public void setTaskName(String newTaskName){
         String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
         Collection <CloudTask> tasksCollection = taskQuerySteps.getTasksByProcessInstance(processInstanceId).getContent();
-        List <CloudTask> tasksList = new ArrayList(tasksCollection);
+        List <CloudTask> tasksList = new ArrayList<>(tasksCollection);
         newTask = tasksList.get(0);
         taskRuntimeBundleSteps.setTaskName(newTask.getId(), newTaskName);
     }
@@ -201,7 +208,7 @@ public class Tasks {
     public void updateTaskFields(){
         String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
         Collection <CloudTask> tasksCollection = taskQuerySteps.getTasksByProcessInstance(processInstanceId).getContent();
-        List <CloudTask> tasksList = new ArrayList(tasksCollection);
+        List <CloudTask> tasksList = new ArrayList<>(tasksCollection);
         newTask = tasksList.get(0);
 
         Date tomorrow = new Date(System.currentTimeMillis() + 86400000);
@@ -217,7 +224,7 @@ public class Tasks {
     public void adminUpdateTaskFields(){
         String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
         Collection <CloudTask> tasksCollection = taskQuerySteps.getTasksByProcessInstance(processInstanceId).getContent();
-        List <CloudTask> tasksList = new ArrayList(tasksCollection);
+        List <CloudTask> tasksList = new ArrayList<>(tasksCollection);
         newTask = tasksList.get(0);
 
         Date tomorrow = new Date(System.currentTimeMillis() + 86400000);
@@ -299,9 +306,11 @@ public class Tasks {
         }
     }
 
-    @When("the user sets task variables")
+    @When("the user creates task variables")
     public void setTaskVariables(){
-        taskRuntimeBundleSteps.setVariables(newTask.getId(), VariableGenerator.variables);
+        for (Map.Entry<String, Object> entry : VariableGenerator.variables.entrySet()) {
+            taskRuntimeBundleSteps.createVariable(newTask.getId(), entry.getKey(), entry.getValue());
+        }
     }
 
     @Then("task variables are visible in rb and query")
