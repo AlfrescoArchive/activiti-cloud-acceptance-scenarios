@@ -155,6 +155,7 @@ public class Tasks {
 
         CloudProcessInstance processFromQuery = processQuerySteps.getProcessInstance(Serenity.sessionVariableCalled("processInstanceId").toString());
         assertThat(processFromQuery).isNotNull();
+      
         CloudTask taskFromRB = taskRuntimeBundleSteps.getTaskById(newTask.getId());
         assertThat(taskFromRB).isNotNull();
         assertThat(taskFromRB.getFormKey()).isEqualTo("taskForm");
