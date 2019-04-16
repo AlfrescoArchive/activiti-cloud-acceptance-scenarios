@@ -37,6 +37,7 @@ import org.activiti.cloud.acc.core.steps.runtime.ProcessRuntimeBundleSteps;
 import org.activiti.cloud.acc.core.steps.runtime.TaskRuntimeBundleSteps;
 import org.activiti.cloud.acc.core.steps.runtime.admin.ProcessRuntimeAdminSteps;
 import org.activiti.cloud.acc.core.steps.runtime.admin.TaskRuntimeAdminSteps;
+import org.activiti.cloud.api.process.model.CloudProcessInstance;
 import org.activiti.cloud.api.task.model.CloudTask;
 import org.activiti.cloud.qa.helpers.VariableGenerator;
 import org.jbehave.core.annotations.Given;
@@ -87,6 +88,13 @@ public class Tasks {
     @Given("the user creates a standalone task")
     public void createTask() throws Exception {
         newTask = taskRuntimeBundleSteps.createNewTask();
+        assertThat(newTask).isNotNull();
+        Serenity.setSessionVariable(STAND_ALONE_TASK_ID).to(newTask.getId());
+    }
+
+    @When("the user creates an unassigned standalone task")
+    public void createUnassignedTask() throws Exception {
+        newTask = taskRuntimeBundleSteps.createNewUnassignedTask();
         assertThat(newTask).isNotNull();
         Serenity.setSessionVariable(STAND_ALONE_TASK_ID).to(newTask.getId());
     }
@@ -147,14 +155,24 @@ public class Tasks {
         assertThat(subtasks.iterator().next()).extracting("id").containsOnly(subtask.getId());
     }
 
-    @Then("the tasks has the formKey field")
-    public void checkIfFormKeyIsPresent(){
+    @Then("the task has the formKey field and correct processInstance fields")
+    public void checkIfFormKeyAndProcessInstanceFieldsArePresent(){
         newTask = obtainFirstTaskFromProcess();
         assertThat(newTask).extracting("formKey").contains("taskForm");
 
-        CloudTask taskFromQuery = taskRuntimeBundleSteps.getTaskById(newTask.getId());
+        CloudProcessInstance processFromQuery = processQuerySteps.getProcessInstance(Serenity.sessionVariableCalled("processInstanceId").toString());
+        assertThat(processFromQuery).isNotNull();
+      
+        CloudTask taskFromRB = taskRuntimeBundleSteps.getTaskById(newTask.getId());
+        assertThat(taskFromRB).isNotNull();
+        assertThat(taskFromRB.getFormKey()).isEqualTo("taskForm");
+        assertThat(taskFromRB.getProcessDefinitionId()).isEqualTo(processFromQuery.getProcessDefinitionId());
+        
+        CloudTask taskFromQuery = taskQuerySteps.getTaskById(newTask.getId());
         assertThat(taskFromQuery).isNotNull();
         assertThat(taskFromQuery.getFormKey()).isEqualTo("taskForm");
+        assertThat(taskFromQuery.getProcessDefinitionId()).isEqualTo(processFromQuery.getProcessDefinitionId());
+        assertThat(taskFromQuery.getProcessDefinitionVersion()).isEqualTo(processFromQuery.getProcessDefinitionVersion());
     }
 
     private CloudTask obtainFirstTaskFromProcess() {
@@ -336,5 +354,21 @@ public class Tasks {
 
         assertThat(generatedMapRuntime).isEqualTo(VariableGenerator.variables);
         assertThat(generatedMapQuery).isEqualTo(VariableGenerator.variables);
+    }
+
+    @When("the user claims the standalone task")
+    public void claimTask() throws Exception {
+        taskRuntimeBundleSteps.claimTask(newTask.getId());
+    }
+
+    @When("the user releases the standalone task")
+    public void releaseTask() throws Exception {
+        taskRuntimeBundleSteps.releaseTask(newTask.getId());
+    }
+
+    @Then("the status of the task is $taskStatus in RB and Query")
+    public void checkTaskStatusInRBAndQuery(Task.TaskStatus taskStatus){
+        taskRuntimeBundleSteps.checkTaskStatus(newTask.getId(), taskStatus);
+        taskQuerySteps.checkTaskStatus(newTask.getId(), taskStatus);
     }
 }

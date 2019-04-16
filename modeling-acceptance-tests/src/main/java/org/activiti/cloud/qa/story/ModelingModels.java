@@ -16,18 +16,19 @@
 
 package org.activiti.cloud.qa.story;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
 import net.thucydides.core.annotations.Steps;
-import org.activiti.cloud.qa.steps.ModelingModelsSteps;
-import org.activiti.cloud.qa.steps.ModelingProjectsSteps;
+import org.activiti.cloud.acc.modeling.steps.ModelingModelsSteps;
+import org.activiti.cloud.acc.modeling.steps.ModelingProjectsSteps;
 import org.jbehave.core.annotations.Alias;
 import org.jbehave.core.annotations.Then;
 import org.jbehave.core.annotations.When;
 
-import static org.activiti.cloud.qa.model.modeling.ModelIdentifier.identified;
-import static org.activiti.cloud.qa.model.modeling.ModelingNamingIdentifier.modelNamed;
+import static org.activiti.cloud.acc.modeling.modeling.ModelIdentifier.identified;
+import static org.activiti.cloud.acc.modeling.modeling.ModelingNamingIdentifier.modelNamed;
 
 /**
  * Modeling models scenarios
@@ -114,5 +115,15 @@ public class ModelingModels {
     @When("adds the process variable '$processVariable'")
     public void addProcessVariableInCurrentModela(String processVariable) {
         modelingModelsSteps.addProcessVariableInCurrentModel(Collections.singletonList(processVariable));
+    }
+
+    @Then("the model is valid")
+    public void validateModelFile() throws IOException {
+        modelingModelsSteps.checkCurrentModelValidation();
+    }
+
+    @Then("$numberOfErrors validation errors are shown for extensions")
+    public void checkCurrentModelValidationErrorsForExtensions(String numberOfErrors) throws IOException {
+        modelingModelsSteps.checkCurrentModelValidationFailureForExtensions("#: " + numberOfErrors + " schema violations found");
     }
 }

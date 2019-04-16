@@ -16,15 +16,12 @@
 
 package org.activiti.cloud.qa.story;
 
-import static org.activiti.cloud.acc.core.helper.Filters.checkEvents;
-import static org.activiti.cloud.acc.core.helper.Filters.checkProcessInstances;
-import static org.activiti.cloud.qa.helpers.ProcessDefinitionRegistry.processDefinitionKeyMatcher;
-import static org.activiti.cloud.qa.helpers.ProcessDefinitionRegistry.processDefinitionKeys;
-import static org.activiti.cloud.qa.helpers.ProcessDefinitionRegistry.withTasks;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import net.serenitybdd.core.Serenity;
@@ -54,6 +51,14 @@ import org.jbehave.core.annotations.Given;
 import org.jbehave.core.annotations.Then;
 import org.jbehave.core.annotations.When;
 import org.springframework.hateoas.PagedResources;
+
+import static org.activiti.cloud.acc.core.helper.Filters.checkEvents;
+import static org.activiti.cloud.acc.core.helper.Filters.checkProcessInstances;
+import static org.activiti.cloud.qa.helpers.ProcessDefinitionRegistry.processDefinitionKeyMatcher;
+import static org.activiti.cloud.qa.helpers.ProcessDefinitionRegistry.processDefinitionKeys;
+import static org.activiti.cloud.qa.helpers.ProcessDefinitionRegistry.withTasks;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 public class ProcessInstanceTasks {
 
@@ -155,6 +160,11 @@ public class ProcessInstanceTasks {
         taskRuntimeBundleSteps.claimTask(currentTask.getId());
     }
 
+    @When("the user releases the task")
+    public void releaseTask() throws Exception {
+        taskRuntimeBundleSteps.releaseTask(currentTask.getId());
+    }
+
     @When("the user completes the task")
     public void completeTask() throws Exception {
         taskRuntimeBundleSteps.completeTask(currentTask.getId(),
@@ -189,12 +199,12 @@ public class ProcessInstanceTasks {
         auditSteps.checkTaskCreatedAndAssignedEventsWhenAlreadyAssinged(currentTask.getId());
     }
 
-    @When("the status of the task is $status")
-    public void checkTaskStatus(Task.TaskStatus status) throws Exception {
-        taskRuntimeBundleSteps.checkTaskStatus(currentTask.getId(), status);
-        taskQuerySteps.checkTaskStatus(currentTask.getId(), status);
+    @When("the status of the task is $taskStatus")
+    public void checkTaskStatus(Task.TaskStatus taskStatus) throws Exception {
+        taskRuntimeBundleSteps.checkTaskStatus(currentTask.getId(), taskStatus);
+        taskQuerySteps.checkTaskStatus(currentTask.getId(), taskStatus);
 
-        switch (status){
+        switch (taskStatus){
             case CREATED:
                 auditSteps.checkTaskCreatedEvent(currentTask.getId());
                 break;
@@ -404,8 +414,13 @@ public class ProcessInstanceTasks {
     public void checkProccessInstanceName (String newProcessName){
         assertThat(processRuntimeBundleSteps.getProcessInstanceById(processInstance.getId()).getName())
                 .isEqualTo(newProcessName);
-        assertThat(processQuerySteps.getProcessInstance(processInstance.getId()).getName())
-                .isEqualTo(newProcessName);
+
+        // propagation my take some time to reach query
+        await().untilAsserted(
+                () ->
+                        assertThat(processQuerySteps.getProcessInstance(processInstance.getId()).getName())
+                                .isEqualTo(newProcessName)
+        );
     }
 
 

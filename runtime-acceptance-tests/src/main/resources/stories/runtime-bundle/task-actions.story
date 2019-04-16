@@ -97,7 +97,7 @@ Then the task from SUB_PROCESS_INSTANCE_WITH_TASK is CREATED and it is called su
 Scenario: check the presence of formKey field in task
 Given the user is authenticated as testuser
 When the user starts an instance of the process called PROCESS_INSTANCE_WITH_SINGLE_TASK_ASSIGNED
-Then the tasks has the formKey field
+Then the task has the formKey field and correct processInstance fields
 
 Scenario: tasks have their own copies of variables
 Given the user is authenticated as testuser
@@ -164,3 +164,10 @@ Scenario: query tasks by name and description using LIKE operator
 Given the user is authenticated as testuser
 When the user creates a standalone task
 Then the standalone task can be queried using LIKE operator
+
+Scenario: release a task
+Given the user is authenticated as testuser
+When the user creates an unassigned standalone task
+And the user claims the standalone task
+And the user releases the standalone task
+Then the status of the task is CREATED in RB and Query
