@@ -20,15 +20,18 @@ import static org.activiti.api.process.model.events.BPMNSignalEvent.SignalEvents
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import net.thucydides.core.annotations.Steps;
 import org.activiti.api.process.model.ProcessInstance;
+import org.activiti.api.task.model.Task;
 import org.activiti.cloud.acc.core.steps.audit.AuditSteps;
 import org.activiti.cloud.acc.core.steps.query.ProcessQuerySteps;
 import org.activiti.cloud.acc.core.steps.runtime.ProcessRuntimeBundleSteps;
+import org.activiti.cloud.acc.core.steps.runtime.admin.ProcessRuntimeAdminSteps;
 import org.activiti.cloud.api.model.shared.events.CloudRuntimeEvent;
 import org.activiti.cloud.api.process.model.CloudProcessInstance;
 import org.jbehave.core.annotations.Then;
@@ -40,12 +43,16 @@ public class ProcessInstanceSignalEvents {
     private ProcessRuntimeBundleSteps runtimeBundleSteps;
     
     @Steps
+    private ProcessRuntimeAdminSteps runtimeBundleAdminSteps;
+    
+    @Steps
     private ProcessQuerySteps processQuerySteps;
     
     @Steps
     private AuditSteps auditSteps;
     
     private CloudProcessInstance processInstanceCatchSignal;
+    private CloudProcessInstance processInstanceBoundarySignal;
     private CloudProcessInstance processInstanceThrowSignal;
     private int checkCnt=0;
     
@@ -57,13 +64,31 @@ public class ProcessInstanceSignalEvents {
     }
     
     @When("the user starts a process with intermediate catch signal")
-    public void startSignalCatchProcessInstance() {
+    public void startSignalCatchProcess() {
         processInstanceCatchSignal = runtimeBundleSteps.startProcess("SignalCatchEventProcess");
         assertThat(processInstanceCatchSignal).isNotNull();
     }
     
+    @Then("the task is created with a name $taskName")
+    public void checkTaskIsCreated(String taskName) {
+        List<Task> tasks = new ArrayList<>(
+                runtimeBundleSteps.getTaskByProcessInstanceId(processInstanceBoundarySignal.getId()));
+        assertThat(tasks).isNotEmpty();
+        
+        Task currentTask = tasks.get(0);
+        assertThat(currentTask).isNotNull();
+        assertThat(currentTask.getName()).isEqualTo(taskName);
+        
+    }
+    
+    @When("the user starts a process with a boundary signal")
+    public void startBoundarySignalProcess() {
+        processInstanceBoundarySignal = runtimeBundleSteps.startProcess("ProcessWithBoundarySignal");
+        assertThat(processInstanceBoundarySignal).isNotNull();
+    }
+    
     @When("the user starts a process with intermediate throw signal")
-    public void startSignalThrowProcessInstance() {
+    public void startSignalThrowProcess() {
         processInstanceThrowSignal = runtimeBundleSteps.startProcess("SignalThrowEventProcess");
         assertThat(processInstanceThrowSignal).isNotNull();
     }
@@ -84,6 +109,12 @@ public class ProcessInstanceSignalEvents {
     public void sheckSignalReceivedEvent() throws Exception {
         checkSignalEventReceivedByProcess(processInstanceCatchSignal);   
     }
+
+    @Then("the SIGNAL_RECEIVED event was catched up by boundary signal process")
+    public void sheckBoundarySignalReceivedEvent() throws Exception {
+        checkSignalEventReceivedByProcess(processInstanceBoundarySignal);   
+    }
+    
     
     @Then("check number of processes with processDefinitionKey $processDefinitionKey")
     public void checkProcessCount(String processDefinitionKey) throws Exception {
@@ -98,6 +129,18 @@ public class ProcessInstanceSignalEvents {
         
         assertThat(processes.size()).isGreaterThan(checkCnt);
         checkCnt=processes.size();
+    }
+  
+
+    @When("the admin deletes boundary signal process")
+    public void deleteBoundarySignalProcesses() throws Exception {   
+        runtimeBundleAdminSteps.deleteProcessInstance(processInstanceBoundarySignal.getId());
+       
+    }
+    
+    @Then("boundary signal process is deleted")
+    public void verifyProcessInstanceIsDeleted() throws Exception {
+        runtimeBundleSteps.checkProcessInstanceNotFound(processInstanceBoundarySignal.getId());        
     }
     
     public List<CloudProcessInstance> getProcessesByProcessDefinitionKey(String processDefinitionKey) throws Exception {
