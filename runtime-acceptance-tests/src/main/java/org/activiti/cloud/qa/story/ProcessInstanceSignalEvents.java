@@ -16,9 +16,13 @@
 
 package org.activiti.cloud.qa.story;
 
+import static org.activiti.api.process.model.events.BPMNSignalEvent.SignalEvents.SIGNAL_RECEIVED;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import net.thucydides.core.annotations.Steps;
 import org.activiti.api.process.model.ProcessInstance;
@@ -43,6 +47,7 @@ public class ProcessInstanceSignalEvents {
     
     private CloudProcessInstance processInstanceCatchSignal;
     private CloudProcessInstance processInstanceThrowSignal;
+    private int checkCnt=0;
     
     @When("services are started")
     public void checkServicesStatus() {
@@ -75,14 +80,53 @@ public class ProcessInstanceSignalEvents {
                                                      ProcessInstance.ProcessInstanceStatus.COMPLETED);       
     }
     
-    @Then("the SIGNAL_RECEIVED event was catched up")
+    @Then("the SIGNAL_RECEIVED event was catched up by intermediateCatchEvent process")
     public void sheckSignalReceivedEvent() throws Exception {
-        Collection<CloudRuntimeEvent> events = auditSteps.getEventsByProcessInstanceIdAndEventType(processInstanceCatchSignal.getId(),
-                                                                                                   "SIGNAL_RECEIVED"); 
-        
-        assertThat(events).isNotEqualTo(0);        
+        checkSignalEventReceivedByProcess(processInstanceCatchSignal);   
     }
     
-  
+    @Then("check number of processes with processDefinitionKey $processDefinitionKey")
+    public void checkProcessCount(String processDefinitionKey) throws Exception {
+        List<CloudProcessInstance> processes = getProcessesByProcessDefinitionKey(processDefinitionKey);
+        checkCnt = processes.size();
+    }
+    
+    @Then("check number of processes with processDefinitionKey $processDefinitionKey increased")
+    public void checkProcessCountIncreased(String processDefinitionKey) throws Exception {
+        List<CloudProcessInstance> processes = getProcessesByProcessDefinitionKey(processDefinitionKey);
+        assertThat(processes).isNotEmpty();
+        
+        assertThat(processes.size()).isGreaterThan(checkCnt);
+        checkCnt=processes.size();
+    }
+    
+    public List<CloudProcessInstance> getProcessesByProcessDefinitionKey(String processDefinitionKey) throws Exception {
+        return processQuerySteps
+                .getProcessInstancesByProcessDefinitionKey(processDefinitionKey)
+                .getContent()
+                .stream()
+                .collect(Collectors.toList());
+    }
+    
+    public void checkSignalEventReceivedByProcess(CloudProcessInstance process) throws Exception  {   
+        assertThat(process).isNotNull();
+        
+        Collection<CloudRuntimeEvent> receivedEvents = auditSteps.getEventsByProcessInstanceIdAndEventType(process.getId(),
+                                                                                                           "SIGNAL_RECEIVED");
+        
+        assertThat(receivedEvents)
+          .isNotEmpty()
+          .extracting( CloudRuntimeEvent::getEventType,
+                       CloudRuntimeEvent::getProcessInstanceId,
+                       CloudRuntimeEvent::getProcessDefinitionKey)
+          .contains(
+                    tuple(SIGNAL_RECEIVED,
+                          process.getId(),
+                          process.getProcessDefinitionKey()));
+            
+ 
+    }
+    
+    
 
 }
