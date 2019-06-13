@@ -344,7 +344,10 @@ public class ProcessInstanceTasks {
             processInstanceAdminDiagram = processQueryAdminSteps.getProcessInstanceDiagram(processInstance.getId());
         } catch (FeignException expected) {
             assertThat(expected.status()).isEqualTo(403);
+            return;
         }
+        
+        throw new AssertionError("fail");
     }    
 
     @Then("the query diagram is shown in admin endpoint")
