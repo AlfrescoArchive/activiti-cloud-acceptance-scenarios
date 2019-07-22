@@ -40,6 +40,10 @@ public class ProcessDefinitionRegistry {
         put("Process Information","processinf-4e42752c-cc4d-429b-9528-7d3df24a9537");
         put("Process with Generic BPMN Task","processwit-c6fd1b26-0d64-47f2-8d04-0b70764444a7");
     }};
+    
+    private static final HashMap <String, String> processWithTimerEvents = new HashMap<String, String>(){{
+        put("INTERMEDIATE_TIMER_EVENT_PROCESS","intermediateTimerEventExample");
+    }};
 
     private static final HashMap <String, String> processWithTimerEvents = new HashMap<String, String>(){{
         put("INTERMEDIATE_TIMER_EVENT_PROCESS","intermediateTimerEventExample");
