@@ -20,20 +20,22 @@ import static org.activiti.cloud.qa.helpers.ProcessDefinitionRegistry.processDef
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 import net.serenitybdd.core.Serenity;
 import net.thucydides.core.annotations.Steps;
 import org.activiti.api.process.model.ProcessInstance;
-import org.activiti.api.task.model.Task;
-import org.activiti.api.task.model.builders.TaskPayloadBuilder;
+import org.activiti.api.process.model.events.BPMNActivityEvent;
+import org.activiti.api.process.model.events.BPMNTimerEvent;
 import org.activiti.cloud.acc.core.steps.audit.AuditSteps;
 import org.activiti.cloud.acc.core.steps.query.ProcessQuerySteps;
 import org.activiti.cloud.acc.core.steps.runtime.ProcessRuntimeBundleSteps;
-import org.activiti.cloud.acc.core.steps.runtime.TaskRuntimeBundleSteps;
+import org.activiti.cloud.api.model.shared.events.CloudRuntimeEvent;
+import org.activiti.cloud.api.process.model.CloudProcessInstance;
 import org.jbehave.core.annotations.Then;
 import org.jbehave.core.annotations.When;
+import org.springframework.hateoas.PagedResources;
 
 public class ProcessInstanceTimers {
 
@@ -63,7 +65,7 @@ public class ProcessInstanceTimers {
     
     @Then("TIMER_SCHEDULED events are emitted for the timer '$timerId' and timeout $timeoutSeconds seconds")
     public void verifyTimerScheduleEventsEmitted(String timerId,
-                                              long timeoutSeconds) throws Exception {
+                                                 long timeoutSeconds) throws Exception {
         if (timeoutSeconds  < 0) {
             timeoutSeconds = 0;
         }
@@ -75,7 +77,7 @@ public class ProcessInstanceTimers {
     
     @Then("TIMER_EXECUTED events are emitted for the timer '$timerId' and timeout $timeoutSeconds seconds")
     public void verifyTimerExecutedEventsEmitted(String timerId,
-                                              long timeoutSeconds) throws Exception {
+                                                 long timeoutSeconds) throws Exception {
         if (timeoutSeconds  < 0) {
             timeoutSeconds = 0;
         }
@@ -91,4 +93,40 @@ public class ProcessInstanceTimers {
         processQuerySteps.checkProcessInstanceStatus(processId,
                 ProcessInstance.ProcessInstanceStatus.COMPLETED);
     }
+    
+    @Then("the query returns $number processes called $processName")
+    public void checkProcessByProcessDefintionKey(long number,
+                                                  String processName) throws IOException, InterruptedException {   
+        
+        PagedResources<CloudProcessInstance> processInstances = processQuerySteps
+                                                                .getProcessInstancesByProcessDefinitionKey(processDefinitionKeyMatcher(processName));
+        
+        assertThat(processInstances).isNotEmpty();
+        assertThat(processInstances.getContent()).isNotNull();
+        assertThat(processInstances.getContent().size()).isEqualTo(number);
+    }
+    
+    @Then("timer events are emitted for processes called $processName")
+    public void verifyTimerEventsForProcesses(String processName) throws Exception {
+       
+        String processDefinitionKey = processDefinitionKeyMatcher(processName);
+        
+        Collection<CloudRuntimeEvent> events = auditSteps.getEventsByEntityId("theStart")
+                                                         .stream()
+                                                         .filter(event -> event.getProcessDefinitionId().startsWith(processDefinitionKey))
+                                                         .collect(Collectors.toList()); 
+        
+        assertThat(events)
+                .isNotEmpty()
+                .extracting("eventType")
+                .contains(BPMNTimerEvent.TimerEvents.TIMER_SCHEDULED,
+                          BPMNTimerEvent.TimerEvents.TIMER_FIRED,
+                          BPMNTimerEvent.TimerEvents.TIMER_EXECUTED,
+                          BPMNActivityEvent.ActivityEvents.ACTIVITY_COMPLETED,
+                          BPMNTimerEvent.TimerEvents.TIMER_FIRED,
+                          BPMNTimerEvent.TimerEvents.TIMER_EXECUTED,
+                          BPMNActivityEvent.ActivityEvents.ACTIVITY_COMPLETED);
+    }
+    
+    
 }

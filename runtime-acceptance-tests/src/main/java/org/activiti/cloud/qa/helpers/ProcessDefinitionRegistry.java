@@ -43,6 +43,7 @@ public class ProcessDefinitionRegistry {
     
     private static final HashMap <String, String> processWithTimerEvents = new HashMap<String, String>(){{
         put("INTERMEDIATE_TIMER_EVENT_PROCESS","intermediateTimerEventExample");
+        put("START_TIMER_EVENT_PROCESS","startTimerEventExample");
     }};
 
     private static final HashMap <String, String> processWithTimerEvents = new HashMap<String, String>(){{
