@@ -62,7 +62,7 @@ public class ProcessInstanceTimers {
     }
     
     @Then("TIMER_SCHEDULED events are emitted for the timer '$timerId' and timeout $timeoutSeconds seconds")
-    public void verifySubProcessEventsEmiited(String timerId,
+    public void verifyTimerScheduleEventsEmitted(String timerId,
                                               long timeoutSeconds) throws Exception {
         if (timeoutSeconds  < 0) {
             timeoutSeconds = 0;
@@ -71,6 +71,18 @@ public class ProcessInstanceTimers {
         auditSteps.checkProcessInstanceTimerScheduledEvents(processInstanceId, 
                                                             timerId,
                                                             timeoutSeconds);
+    }
+    
+    @Then("TIMER_EXECUTED events are emitted for the timer '$timerId' and timeout $timeoutSeconds seconds")
+    public void verifyTimerExecutedEventsEmitted(String timerId,
+                                              long timeoutSeconds) throws Exception {
+        if (timeoutSeconds  < 0) {
+            timeoutSeconds = 0;
+        }
+        String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
+        auditSteps.checkProcessInstanceTimerExecutedEvents(processInstanceId, 
+                                                           timerId,
+                                                           timeoutSeconds);
     }
 
     @Then("the process with timer events is completed")
