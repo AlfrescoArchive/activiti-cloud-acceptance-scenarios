@@ -15,3 +15,10 @@ Scenario: check a process instance with start timer event
 Given the user is authenticated as hruser
 Then the query returns 2 processes called START_TIMER_EVENT_PROCESS
 And timer events are emitted for processes called START_TIMER_EVENT_PROCESS
+
+Scenario: check a process instance with boundary timer event
+Given the user is authenticated as hruser
+When the user starts a process with timer events called BOUNDARY_TIMER_EVENT_PROCESS
+Then TIMER_SCHEDULED events are emitted for the timer 'timer' and timeout 1 seconds
+And TIMER_EXECUTED events are emitted for the timer 'timer' and timeout 10 seconds 
+And the process with timer events is completed
