@@ -121,16 +121,23 @@ public class ProcessInstanceTimers {
                 ProcessInstance.ProcessInstanceStatus.COMPLETED);
     }
     
-    @Then("the query returns $number processes called $processName")
+    @Then("the query returns $number processes called $processName with timeout $timeoutSeconds seconds")
     public void checkProcessByProcessDefintionKey(long number,
-                                                  String processName) throws IOException, InterruptedException {   
+                                                  String processName,
+                                                  long timeoutSeconds) throws IOException, InterruptedException {   
+        if (timeoutSeconds  < 0) {
+            timeoutSeconds = 0;
+        }
         
-        PagedResources<CloudProcessInstance> processInstances = processQuerySteps
-                                                                .getProcessInstancesByProcessDefinitionKey(processDefinitionKeyMatcher(processName));
-        
-        assertThat(processInstances).isNotEmpty();
-        assertThat(processInstances.getContent()).isNotNull();
-        assertThat(processInstances.getContent().size()).isEqualTo(number);
+        await().atMost(timeoutSeconds,
+                       TimeUnit.SECONDS).untilAsserted(() -> {
+                PagedResources<CloudProcessInstance> processInstances = processQuerySteps
+                                                                       .getProcessInstancesByProcessDefinitionKey(processDefinitionKeyMatcher(processName));
+    
+                assertThat(processInstances).isNotEmpty();
+                assertThat(processInstances.getContent()).isNotNull();
+                assertThat(processInstances.getContent().size()).isEqualTo(number);                     
+        });   
     }
     
     @Then("timer events are emitted for processes called $processName")
