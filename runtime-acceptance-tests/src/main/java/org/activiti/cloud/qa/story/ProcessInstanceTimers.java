@@ -18,9 +18,12 @@ package org.activiti.cloud.qa.story;
 
 import static org.activiti.cloud.qa.helpers.ProcessDefinitionRegistry.processDefinitionKeyMatcher;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.awaitility.Awaitility.await;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import net.serenitybdd.core.Serenity;
@@ -75,6 +78,30 @@ public class ProcessInstanceTimers {
                                                             timeoutSeconds);
     }
     
+    @Then("TIMER_SCHEDULED boundary events are emitted for the timer '$timerId' and timeout $timeoutSeconds seconds")
+    public void verifyTimerEventsEmitted(String timerId,
+                                         long timeoutSeconds) throws Exception {
+     
+        if (timeoutSeconds  < 0) {
+            timeoutSeconds = 0;
+        }
+        
+        String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
+        await().atMost(timeoutSeconds,
+                       TimeUnit.SECONDS).untilAsserted(() -> {
+                  Collection <CloudRuntimeEvent> events = auditSteps.getEventsByProcessAndEntityId(processInstanceId,
+                                                                                                   timerId);
+                  assertThat(events)
+                          .isNotEmpty()
+                          .extracting("eventType",
+                                      "entityId",
+                                      "processInstanceId")
+                          .contains(tuple(BPMNTimerEvent.TimerEvents.TIMER_SCHEDULED,
+                                          timerId,
+                                          processInstanceId));
+          });
+    }
+    
     @Then("TIMER_EXECUTED events are emitted for the timer '$timerId' and timeout $timeoutSeconds seconds")
     public void verifyTimerExecutedEventsEmitted(String timerId,
                                                  long timeoutSeconds) throws Exception {
@@ -127,6 +154,5 @@ public class ProcessInstanceTimers {
                           BPMNTimerEvent.TimerEvents.TIMER_EXECUTED,
                           BPMNActivityEvent.ActivityEvents.ACTIVITY_COMPLETED);
     }
-    
     
 }
