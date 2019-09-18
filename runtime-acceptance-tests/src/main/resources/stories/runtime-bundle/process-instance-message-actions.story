@@ -1,5 +1,4 @@
 Meta:
-@current
 
 Narrative:
 As a user
