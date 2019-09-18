@@ -31,11 +31,13 @@ import org.activiti.cloud.acc.core.steps.audit.AuditSteps;
 import org.activiti.cloud.acc.core.steps.query.ProcessQuerySteps;
 import org.activiti.cloud.acc.core.steps.runtime.ProcessRuntimeBundleSteps;
 import org.activiti.cloud.api.model.shared.events.CloudRuntimeEvent;
+import org.jbehave.core.annotations.Given;
 import org.jbehave.core.annotations.Then;
 import org.jbehave.core.annotations.When;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class ProcessInstanceMessages {
@@ -50,6 +52,17 @@ public class ProcessInstanceMessages {
     private AuditSteps auditSteps;
     
     private ProcessInstance processInstance;
+
+    
+    @Given("generated unique sessionVariable called $variableName")
+    public void generateUniqueBusinessId(String variableName) {
+        Serenity.setSessionVariable(variableName).to(UUID.randomUUID().toString());
+    }
+
+    @Given("session timeout of $timeoutSeconds seconds")
+    public void setSessionTimeoutSeconds(long timeoutSeconds) {
+        Serenity.setSessionVariable("timeoutSeconds").to(timeoutSeconds);
+    }
     
     @When("services are started")
     public void checkServicesStatus() {
@@ -58,10 +71,12 @@ public class ProcessInstanceMessages {
         auditSteps.checkServicesHealth();
     }
     
-    @When("the user sends a start message named $messageName with businessKey value $businessKey")
-    public void startMessage(String messageName, String businessKey) throws IOException, InterruptedException {      
+    @When("the user sends a start message named $messageName with businessKey value of $businessKey")
+    public void startMessage(String messageName, String businessKey) throws IOException, InterruptedException {
+        String variableValue = Serenity.sessionVariableCalled(businessKey);
+
         StartMessagePayload payload = MessagePayloadBuilder.start(messageName)
-                                                           .withBusinessKey(businessKey)
+                                                           .withBusinessKey(variableValue)
                                                            .build();
 
         processInstance = processRuntimeBundleSteps.message(payload);
@@ -69,84 +84,36 @@ public class ProcessInstanceMessages {
         Serenity.setSessionVariable("processInstanceId").to(processInstance.getId());
     }
 
-    @Then("the sends a message named $messageName with correlationKey value $correlationKey")
+    @Then("the user sends a message named $messageName with correlationKey value of $correlationKey")
     public void receiveMessage(String messageName, String correlationKey) throws IOException, InterruptedException {      
+        String variableValue = Serenity.sessionVariableCalled(correlationKey);
         ReceiveMessagePayload payload = MessagePayloadBuilder.receive(messageName)
-                                                             .withCorrelationKey(correlationKey)
+                                                             .withCorrelationKey(variableValue)
                                                              .build();
 
         processRuntimeBundleSteps.message(payload);
     }
-    
-    @Then("MESSAGE_RECEIVED events are emitted for the message '$messageName' and timeout $timeoutSeconds seconds")
-    public void verifyTimerScheduleEventsEmitted(String messageName,
-                                                 long timeoutSeconds) throws Exception {
-        if (timeoutSeconds  < 0) {
-            timeoutSeconds = 0;
-        }
-        String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
-        
-        await().atMost(timeoutSeconds, TimeUnit.SECONDS)
-               .untilAsserted(() -> {
-                   Collection<CloudRuntimeEvent> events = auditSteps.getEventsByProcessAndEntityId(processInstanceId,
-                                                                                                   messageName);
-                   assertThat(events)
-                                     .isNotEmpty()
-                                     .extracting("eventType",
-                                                 "entityId",
-                                                 "processInstanceId")
-                                     .contains(tuple(BPMNMessageEvent.MessageEvents.MESSAGE_RECEIVED,
-                                                     messageName,
-                                                     processInstanceId));
-               });
-    }
-    
-    @Then("MESSAGE_WAITING events are emitted for the message '$messageName' and timeout $timeoutSeconds seconds")
-    public void verifyMessageWaitingEventsEmitted(String messageName,
-                                                 long timeoutSeconds) throws Exception {
-     
-        if (timeoutSeconds  < 0) {
-            timeoutSeconds = 0;
-        }
-        
-        String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
-        await().atMost(timeoutSeconds, TimeUnit.SECONDS)
-        .untilAsserted(() -> {
-            Collection<CloudRuntimeEvent> events = auditSteps.getEventsByProcessAndEntityId(processInstanceId,
-                                                                                            messageName);
-            assertThat(events)
-                              .isNotEmpty()
-                              .extracting("eventType",
-                                          "entityId",
-                                          "processInstanceId")
-                              .contains(tuple(BPMNMessageEvent.MessageEvents.MESSAGE_WAITING,
-                                              messageName,
-                                              processInstanceId));
-        });
-    }
 
-    @Then("MESSAGE_SENT events are emitted for the message '$messageName' and timeout $timeoutSeconds seconds")
-    public void verifyMessageSentEventsEmitted(String messageName,
-                                               long timeoutSeconds) throws Exception {
-     
-        if (timeoutSeconds  < 0) {
-            timeoutSeconds = 0;
-        }
+    @Then("$eventType event is emitted for the message '$messageName'")
+    public void verifyTimerScheduleEventsEmitted(String eventType,
+                                                 String messageName) throws Exception {
+        long timeoutSeconds = sessionTimeoutSeconds();
         
         String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
-        await().atMost(timeoutSeconds, TimeUnit.SECONDS)
-        .untilAsserted(() -> {
-            Collection<CloudRuntimeEvent> events = auditSteps.getEventsByProcessAndEntityId(processInstanceId,
-                                                                                            messageName);
-            assertThat(events)
-                              .isNotEmpty()
-                              .extracting("eventType",
-                                          "entityId",
-                                          "processInstanceId")
-                              .contains(tuple(BPMNMessageEvent.MessageEvents.MESSAGE_SENT,
-                                              messageName,
-                                              processInstanceId));
-        });
+        
+        await()
+               .atMost(timeoutSeconds, TimeUnit.SECONDS)
+               .untilAsserted(() -> {
+                   Collection<CloudRuntimeEvent> events = auditSteps.getEventsByProcessInstanceIdAndEventType(processInstanceId,
+                                                                                                              eventType);
+                   assertThat(events).isNotEmpty()
+                                     .extracting("eventType",
+                                                 "processInstanceId",
+                                                 "entity.messagePayload.name")
+                                     .contains(tuple(BPMNMessageEvent.MessageEvents.valueOf(eventType),
+                                                     processInstanceId,
+                                                     messageName));
+               });
     }
     
     @Then("the process with message events is completed")
@@ -155,6 +122,17 @@ public class ProcessInstanceMessages {
         
         processQuerySteps.checkProcessInstanceStatus(processId,
                                                      ProcessInstance.ProcessInstanceStatus.COMPLETED);
+    }
+    
+    private long sessionTimeoutSeconds() {
+        long timeoutSeconds = Serenity.sessionVariableCalled("timeoutSeconds");
+        
+        if (timeoutSeconds  < 0) {
+            timeoutSeconds = 0;
+        }
+        
+        return timeoutSeconds;
+
     }
     
 }
