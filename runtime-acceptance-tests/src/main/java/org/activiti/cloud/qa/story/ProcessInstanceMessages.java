@@ -71,7 +71,7 @@ public class ProcessInstanceMessages {
         auditSteps.checkServicesHealth();
     }
     
-    @When("the user sends a start message named $messageName with businessKey value of $businessKey")
+    @When("the user sends a start message named $messageName with businessKey value of $businessKey session variable")
     public void startMessage(String messageName, String businessKey) throws IOException, InterruptedException {
         String variableValue = Serenity.sessionVariableCalled(businessKey);
 

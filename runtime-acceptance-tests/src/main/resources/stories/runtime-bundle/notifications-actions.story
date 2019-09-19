@@ -51,7 +51,7 @@ Scenario: complete a process instance by messages with subscriptions to MESSAGE 
 Given the user is authenticated as testadmin
 And generated random value for session variable called businessId
 When the user subscribes to MESSAGE_RECEIVED,MESSAGE_WAITING,MESSAGE_SENT notifications
-And the user sends a start message named startMessage with businessKey value of session variable called businessId
+And the user sends a start message named startMessage with businessKey value from session variable called businessId
 Then verify process instance started response
 And the payload with MESSAGE_RECEIVED,MESSAGE_WAITING notifications is expected
 And the user sends a message named boundaryMessage with correlationKey value of session variable called businessId

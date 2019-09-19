@@ -146,7 +146,7 @@ public class ProcessInstanceNotifications {
         processInstanceRef =  new AtomicReference<>(processRuntimeBundleSteps.startProcess(processDefinitionKey, true));
     }
 
-    @When("the user sends a start message named $messageName with businessKey value of session variable called $variableName")
+    @When("the user sends a start message named $messageName with businessKey value from session variable called $variableName")
     public void sendStartMessage(String messageName,
                                  String variableName) throws IOException, InterruptedException {
 
