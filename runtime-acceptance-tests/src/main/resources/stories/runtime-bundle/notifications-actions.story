@@ -28,12 +28,17 @@ When the user starts a process BOUNDARY_TIMER_EVENT_PROCESS with TIMER subscript
 Then the status of the process is completed
 And TIMER notifications are received
 
-Scenario: complete a process instance by messages with subscriptions to MESSAGE event notifications
+Scenario: complete a process instance by messages with subscriptions to MESSAGE_RECEIVED,MESSAGE_WAITING,MESSAGE_SENT event notifications
 Given the user is authenticated as testadmin
-When the user sends message startMessage with businessKey value businessId when subscribed to MESSAGE notifications
-Then MESSAGE_RECEIVED and MESSAGE_WAITING notifications are received
-Then the user sends a message named boundaryMessage with correlationKey value businessId
-Then MESSAGE_RECEIVED and MESSAGE_WAITING notifications are received
-Then the user sends a message named catchMessage with correlationKey equals businessId
-Then MESSAGE_RECEIVED and MESSAGE_SENT notifications are received
+And generated random value for session variable called businessId
+And subscription timeout of 3 seconds
+And session timeout of 5 seconds
+When the user subscribes to the list of MESSAGE_RECEIVED,MESSAGE_WAITING,MESSAGE_SENT notifications
+And the user sends message startMessage with businessKey value of businessId session variable
+Then the list of MESSAGE_RECEIVED,MESSAGE_WAITING notifications are received
+And the user sends a message named boundaryMessage with correlationKey value of businessId session variable
+And the list of MESSAGE_RECEIVED,MESSAGE_WAITING notifications are received
+And the user sends a message named catchMessage with correlationKey value of businessId session variable 
+And the list of MESSAGE_RECEIVED,MESSAGE_SENT notifications are received
 And the status of the process is completed
+And the user completes subscription with all notifications received
