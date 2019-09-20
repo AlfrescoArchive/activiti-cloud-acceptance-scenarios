@@ -89,13 +89,6 @@ public class ProcessInstanceErrorEvents {
         });
     }
     
-    @Then("the process with error events is completed")
-    public void verifyProcessCompleted() throws Exception {
-        String processId = Serenity.sessionVariableCalled("processInstanceId");
-        processQuerySteps.checkProcessInstanceStatus(processId,
-                ProcessInstance.ProcessInstanceStatus.COMPLETED);
-    }
-    
     @Then("the user deletes the process with error events")
     public void deleteCurrentProcessInstance() throws Exception {
         String processId = Serenity.sessionVariableCalled("processInstanceId");
