@@ -73,34 +73,34 @@ public class ProcessInstanceNotifications {
     
     private Step<String> stepVerifier;
 
-    @When("services are started")
+    @When("notifications: services are started")
     public void checkServicesStatus() {
         processRuntimeBundleSteps.checkServicesHealth();
         processQuerySteps.checkServicesHealth();
         notificationsSteps.checkServicesHealth();
     }
     
-    @Given("session variable called $variableName with value set to $variableValue")
+    @Given("notifications: session variable called $variableName with value set to $variableValue")
     public void setSessionVariableTo(String variableName, String variableValue) {
         Serenity.setSessionVariable(variableName).to(variableValue);
     }
     
-    @Given("generated random value for session variable called $variableName")
+    @Given("notifications: generated random value for session variable called $variableName")
     public void generateUniqueBusinessId(String variableName) {
         Serenity.setSessionVariable(variableName).to(UUID.randomUUID().toString());
     }
 
-    @Given("session timeout of $timeoutSeconds seconds")
+    @Given("notifications: session timeout of $timeoutSeconds seconds")
     public void setSessionTimeoutSeconds(long timeoutSeconds) {
         Serenity.setSessionVariable("sessionTimeoutSeconds").to(timeoutSeconds);
     }
 
-    @Given("subscription timeout of $timeoutSeconds seconds")
+    @Given("notifications: subscription timeout of $timeoutSeconds seconds")
     public void setSubscriptionTimeoutSeconds(long timeoutSeconds) {
         Serenity.setSessionVariable("subscriptionTimeoutSeconds").to(timeoutSeconds);
     }
     
-    @When("the user subscribes to $eventTypesString notifications")
+    @When("notifications: the user subscribes to $eventTypesString notifications")
     public void subscribeToEventTypesNotifications(String eventTypesString) throws IOException, InterruptedException {
         
         String businessKey = sessionVariableCalled("businessKey", String.class).orElse("*");
@@ -114,7 +114,7 @@ public class ProcessInstanceNotifications {
     }
     
     
-    @When("the user subscribes to $eventTypesString notifications with businessKey value from session variable called $variableName")
+    @When("notifications: the user subscribes to $eventTypesString notifications with businessKey value from session variable called $variableName")
     public void subscribeToEventTypesNotificationsWithBusinessKeySessionVariable(String eventTypesString,
                                                                                  String variableName) throws IOException, InterruptedException {
 
@@ -128,14 +128,14 @@ public class ProcessInstanceNotifications {
                                    .expectSubscription();
     }
     
-    @When("the user starts a process $processName")
+    @When("notifications: the user starts a process $processName")
     public void startProcess(String processName) throws IOException, InterruptedException {
         String processDefinitionKey = processDefinitionKeyMatcher(processName);
         
         processInstanceRef =  new AtomicReference<>(processRuntimeBundleSteps.startProcess(processDefinitionKey, true));
     }
 
-    @When("the user sends a start message named $messageName with businessKey value from session variable called $variableName")
+    @When("notifications: the user sends a start message named $messageName with businessKey value from session variable called $variableName")
     public void sendStartMessage(String messageName,
                                  String variableName) throws IOException, InterruptedException {
 
@@ -149,19 +149,19 @@ public class ProcessInstanceNotifications {
         processInstanceRef.set(processRuntimeBundleSteps.message(payload));
     }
 
-    @Then("verify subscription started")
+    @Then("notifications: verify subscription started")
     public void verifySubscriptionStarted() {
         assertThat(subscriptionRef.get()).as("should start the subscription")
                                          .isNotNull();
     }
     
-    @Then("verify process instance started response")
+    @Then("notifications: verify process instance started response")
     public void verifyProcessInstanceStarted() {
         assertThat(processInstanceRef.get()).as("should receive process instance in the response")
                                             .isNotNull();
     }
     
-    @Then("the user sends a message named $messageName with correlationKey value of session variable called $variableName")
+    @Then("notifications: the user sends a message named $messageName with correlationKey value of session variable called $variableName")
     public void sendMessage(String messageName, 
                             String variableName) throws Exception {
 
@@ -174,7 +174,7 @@ public class ProcessInstanceNotifications {
         processRuntimeBundleSteps.message(payload);
     }    
     
-    @Then("verify the status of the process is completed")
+    @Then("notifications: verify the status of the process is completed")
     public void verifyProcessCompleted() throws Exception {
         assertThat(processInstanceRef.get()).isNotNull();
 
@@ -189,14 +189,14 @@ public class ProcessInstanceNotifications {
         }
     }
     
-    @Then("the user completes the subscription")
+    @Then("notifications: the user completes the subscription")
     public void completeSubscription() {
         assertThat(subscriptionRef.get()).isNotNull();
 
         cancelSubscription();
     }
 
-    @Then("verify all expected notifications are received")
+    @Then("notifications: verify all expected notifications are received")
     public void verifyAllNotificationsAreReceived() {
         long sessionTimeout = sessionTimeoutSeconds(); 
 
@@ -204,7 +204,7 @@ public class ProcessInstanceNotifications {
                     .verify(Duration.ofSeconds(sessionTimeout));
     }
     
-    @Then("the payload with $eventTypes notifications is expected with process definition key value $processDefinitionKey")
+    @Then("notifications: the payload with $eventTypes notifications is expected with process definition key value $processDefinitionKey")
     public void expectPayloadWithEventTypesNotification(String eventTypes,
                                                         String processDefinitionKey) throws Exception {
         
@@ -213,7 +213,7 @@ public class ProcessInstanceNotifications {
         stepVerifier.expectNext(messagePayload);
     }
 
-    @Then("the payload with $eventTypes notifications is expected")
+    @Then("notifications: the payload with $eventTypes notifications is expected")
     public void expectPayloadWithEventTypesNotification(String eventTypes) throws Exception {
         
         String processDefinitionKey = processInstanceRef.get()
