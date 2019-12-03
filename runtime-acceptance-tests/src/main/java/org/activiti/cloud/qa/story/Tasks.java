@@ -104,7 +104,7 @@ public class Tasks {
         Serenity.setSessionVariable(STAND_ALONE_TASK_ID).to(newTask.getId());
     }
 
-    @Then("the task is created and the status is assigned")
+    @Then("the task with a status assigned is created")
     public void taskIsCreatedAndAssigned() throws Exception {
         final CloudTask assignedTask = taskRuntimeBundleSteps.getTaskById(newTask.getId());
         assertThat(assignedTask).isNotNull();

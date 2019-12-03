@@ -15,7 +15,7 @@ Then the status of the process and the task is changed to completed
 Scenario: create a standalone task
 Given the user is authenticated as testuser
 When the user creates a standalone task
-Then the task is created and the status is assigned
+Then the task with a status assigned is created
 
 Scenario: delete a standalone task
 Given the user is authenticated as testuser
