@@ -296,7 +296,7 @@ public class Tasks {
         auditSteps.checkTaskUpdatedEvent(newTask.getId());
     }
 
-    @Then("the user will see only root tasks when quering for root tasks")
+    @Then("the user can see only root tasks when quering for root tasks")
     public void checkRootTasks(){
         String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
         Collection <CloudTask> rootTasksCollection = taskQuerySteps.getRootTasksByProcessInstance(processInstanceId).getContent();
@@ -309,7 +309,7 @@ public class Tasks {
         );
     }
 
-    @Then("the user will see only standalone tasks when quering for standalone tasks")
+    @Then("the user can see only standalone tasks when quering for standalone tasks")
     public void checkStandaloneTasks(){
         Collection <CloudTask> standaloneTasksCollection = taskQuerySteps.getStandaloneTasks().getContent();
 

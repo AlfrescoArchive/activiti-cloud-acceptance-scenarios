@@ -124,7 +124,7 @@ And the task has the updated fields
 Scenario: check root tasks for the process TWO_TASK_PROCESS
 Given the user is authenticated as testuser
 When the user starts an instance of the process called TWO_TASK_PROCESS
-Then the user will see only root tasks when quering for root tasks
+Then the user can see only root tasks when quering for root tasks
 
 Scenario: check the task has completion fields
 Given the user is authenticated as testuser
@@ -137,7 +137,7 @@ Given the user is authenticated as testuser
 When the user starts an instance of the process called PROCESS_INSTANCE_WITH_VARIABLES
 And the user claims the task
 And the user creates a standalone task
-Then the user will see only standalone tasks when quering for standalone tasks
+Then the user can see only standalone tasks when quering for standalone tasks
 
 Scenario: admin completes tasks in a running process
 Given the user is authenticated as testadmin
