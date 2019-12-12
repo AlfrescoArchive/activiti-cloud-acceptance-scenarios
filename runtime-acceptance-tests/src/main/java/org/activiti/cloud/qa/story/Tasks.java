@@ -18,6 +18,13 @@ package org.activiti.cloud.qa.story;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import net.serenitybdd.core.Serenity;
 import net.thucydides.core.annotations.Steps;
 import org.activiti.api.model.shared.event.VariableEvent;
@@ -41,13 +48,6 @@ import org.jbehave.core.annotations.Given;
 import org.jbehave.core.annotations.Then;
 import org.jbehave.core.annotations.When;
 import org.springframework.hateoas.PagedResources;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class Tasks {
 
@@ -104,7 +104,7 @@ public class Tasks {
         Serenity.setSessionVariable(STAND_ALONE_TASK_ID).to(newTask.getId());
     }
 
-    @Then("the task is created and the status is assigned")
+    @Then("the task with a status assigned is created")
     public void taskIsCreatedAndAssigned() throws Exception {
         final CloudTask assignedTask = taskRuntimeBundleSteps.getTaskById(newTask.getId());
         assertThat(assignedTask).isNotNull();
@@ -252,6 +252,8 @@ public class Tasks {
         Collection <CloudTask> tasksCollection = taskQuerySteps.getTasksByProcessInstance(processInstanceId).getContent();
         List <CloudTask> tasksList = new ArrayList<>(tasksCollection);
         newTask = tasksList.get(0);
+        
+        assertThat(newTask.getTaskDefinitionKey()).isEqualTo("Task_03l0zc2");
 
         Date tomorrow = new Date(System.currentTimeMillis() + 86400000);
         Serenity.setSessionVariable("tomorrow").to(tomorrow);
@@ -270,25 +272,23 @@ public class Tasks {
     public void checkUpdatedTaskFields (){
         Date tomorrow = Serenity.sessionVariableCalled("tomorrow");
 
-        //name
-        assertThat(taskRuntimeBundleSteps.getTaskById(newTask.getId()).getName())
-                .isEqualTo("new-task-name");
-        assertThat(taskQuerySteps.getTaskById(newTask.getId()).getName())
-                .isEqualTo("new-task-name");
-        //priority
-        assertThat(taskRuntimeBundleSteps.getTaskById(newTask.getId()).getPriority())
-                .isEqualTo(3);
-        assertThat(taskQuerySteps.getTaskById(newTask.getId()).getPriority())
-                .isEqualTo(3);
-        //dueDate
-        assertThat(taskRuntimeBundleSteps.getTaskById(newTask.getId()).getDueDate())
-                .isEqualTo(tomorrow);
-        assertThat(taskQuerySteps.getTaskById(newTask.getId()).getDueDate())
-                .isEqualTo(tomorrow);
-        //formKey
-        assertThat(taskRuntimeBundleSteps.getTaskById(newTask.getId()).getFormKey())
-                .isEqualTo("new-task-form-key");
-        //assertThat(taskQuerySteps.getTaskById(newTask.getId()).getFormKey()).isEqualTo("new-task-form-key");
+        CloudTask checkTask = taskRuntimeBundleSteps.getTaskById(newTask.getId());
+        
+        assertThat(checkTask).isNotNull();
+        assertThat(checkTask.getTaskDefinitionKey()).isEqualTo("Task_03l0zc2");
+        assertThat(checkTask.getName()).isEqualTo("new-task-name");
+        assertThat(checkTask.getPriority()).isEqualTo(3);
+        assertThat(checkTask.getDueDate()).isEqualTo(tomorrow);
+        assertThat(checkTask.getFormKey()).isEqualTo("new-task-form-key");
+        
+        checkTask = taskQuerySteps.getTaskById(newTask.getId());
+        
+        assertThat(checkTask).isNotNull();
+        assertThat(checkTask.getTaskDefinitionKey()).isEqualTo("Task_03l0zc2");
+        assertThat(checkTask.getName()).isEqualTo("new-task-name");
+        assertThat(checkTask.getPriority()).isEqualTo(3);
+        assertThat(checkTask.getDueDate()).isEqualTo(tomorrow);
+        assertThat(checkTask.getFormKey()).isEqualTo("new-task-form-key");
     }
 
     @Then("the task is updated")
@@ -296,7 +296,7 @@ public class Tasks {
         auditSteps.checkTaskUpdatedEvent(newTask.getId());
     }
 
-    @Then("the user will see only root tasks when quering for root tasks")
+    @Then("the user can see only root tasks when quering for root tasks")
     public void checkRootTasks(){
         String processInstanceId = Serenity.sessionVariableCalled("processInstanceId");
         Collection <CloudTask> rootTasksCollection = taskQuerySteps.getRootTasksByProcessInstance(processInstanceId).getContent();
@@ -309,7 +309,7 @@ public class Tasks {
         );
     }
 
-    @Then("the user will see only standalone tasks when quering for standalone tasks")
+    @Then("the user can see only standalone tasks when quering for standalone tasks")
     public void checkStandaloneTasks(){
         Collection <CloudTask> standaloneTasksCollection = taskQuerySteps.getStandaloneTasks().getContent();
 
