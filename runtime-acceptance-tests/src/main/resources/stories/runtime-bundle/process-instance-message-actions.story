@@ -36,3 +36,14 @@ When messages: the user sends a start message named startMessage with businessKe
 Then messages: MESSAGE_RECEIVED event is emitted for the message 'startMessage'
 And messages: MESSAGE_WAITING event is emitted for the message 'boundaryMessage'
 And messages: the user gets internal server error when starting a process with message named startMessage and duplicate correlationKey businessId
+
+Scenario: execute processes using cloud native message events
+Given messages: session timeout of 5 seconds
+And the user is authenticated as hruser
+And messages: generated unique sessionVariable called businessId
+When messages: the user sends a start message named StartCloudMessage1 with businessKey value of businessId session variable
+Then messages: MESSAGE_RECEIVED event is emitted for the message 'StartCloudMessage1'
+And messages: MESSAGE_SENT event is emitted for the message 'StartCloudMessage3'
+And messages: MESSAGE_SENT event is emitted for the message 'StartCloudMessage2'
+And messages: the process with message events is completed
+
