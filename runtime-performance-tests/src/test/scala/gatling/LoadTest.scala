@@ -20,23 +20,23 @@ class LoadTest extends Simulation {
   //context.getLogger("io.gatling.http").setLevel(Level.valueOf("TRACE"))
   // Log failed HTTP requests
   //context.getLogger("io.gatling.http").setLevel(Level.valueOf("DEBUG"))
-  
+
   var authenticated = new CountDownLatch(1);
 
   val httpConf = http.disableFollowRedirect
-  
+
   val ssoUrl = "http://identity.${domain}/auth/realms/${realm}/protocol/openid-connect/token"
   val rbUrl = "http://gateway.${domain}/rb"
   val queryUrl = "http://gateway.${domain}/query"
   val graphqlUrl = "http://gateway.${domain}/notifications/graphql"
-  
+
   var access_token: String = ""
   val sessionHeaders = Map(
     "Authorization" -> "Bearer ${access_token}",
     "Content-Type" -> "application/json")
 
   val httpProtocol: HttpProtocolBuilder = http
-  
+
   val authenticate = scenario("Get access_token")
     .exec(session => session
       .set("domain", Config.domain)
@@ -59,7 +59,7 @@ class LoadTest extends Simulation {
     })
 
   object Scenarios {
-    val healthCheck: ChainBuilder = 
+    val healthCheck: ChainBuilder =
       exec(session => session
         .set("domain", Config.domain))
       .exec(http("Rb is Up")
@@ -70,8 +70,8 @@ class LoadTest extends Simulation {
         .get(queryUrl + "/actuator/health")
         .header("Accept", "*/*")
         .check(status.is(200)))
-        
-    val slaCheck: ChainBuilder = 
+
+    val slaCheck: ChainBuilder =
       exec(session => session
         .set("domain", Config.domain)
         .set("access_token", access_token)
