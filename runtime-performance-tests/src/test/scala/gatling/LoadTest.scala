@@ -12,6 +12,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import io.gatling.commons.validation._
 import gatling.config.Config
+import scala.util.Random
 
 class LoadTest extends Simulation {
 
@@ -108,6 +109,30 @@ class LoadTest extends Simulation {
       .exitHereIfFailed
   }
 
+  val pages:Int = 9
+  val limit:Int = 100
+
+  object GraphQL {
+    val tasks: ChainBuilder = repeat(pages, "i") {
+      exec(session => {
+         session.set("page", Random.nextInt(100)+1) // session("i").as[Int]+1)
+                .set("limit", limit)
+                .set("domain", Config.domain)
+                .set("access_token", access_token)
+      })
+      .exec(http("query{Tasks(page:{start:${page},limit:${limit}})")
+        .post(graphqlUrl)
+        .body(StringBody("""{
+            "query": "query{Tasks(where:{taskCandidateGroups:{groupId:{IN: \"hr\"}},status:{EQ:CREATED}},page:{start:${page},limit:${limit}}){select{id,name,status,variables{id,name,value,type},taskCandidateUsers{userId},taskCandidateGroups{groupId},processInstance{id,status,variables{id,name,value,type}}}}}",
+            "variables": null
+          }"""))
+        .headers(sessionHeaders)
+        .check(status is 200)
+        .check(jsonPath("$.data.Tasks.select")))
+        .pause(1)
+    }
+  }
+
   val awaitAuthenticated = exec(session => {
       authenticated.await(2, TimeUnit.SECONDS)
       session
@@ -115,14 +140,15 @@ class LoadTest extends Simulation {
 
   val healthCheck: ScenarioBuilder = scenario("Health Check").exec(Scenarios.healthCheck)
   val slaCheck: ScenarioBuilder = scenario("Rb -> Query Sync SLA").exec(awaitAuthenticated).exec(Scenarios.slaCheck)
+  val graphQLCheck: ScenarioBuilder = scenario("Query Tasks by Page").exec(awaitAuthenticated).exec(GraphQL.tasks)
 
   setUp(authenticate.inject(constantUsersPerSec(1) during (1 seconds)),
         healthCheck.inject(constantUsersPerSec(1) during (1 seconds)),
-        slaCheck.inject(incrementConcurrentUsers(10)
+        graphQLCheck.inject(incrementConcurrentUsers(10)
           .times(10)
           .eachLevelLasting(10 seconds)
           .separatedByRampsLasting(10 seconds)
-          .startingFrom(20))
+          .startingFrom(1))
         .protocols(httpConf))
         .assertions(global.successfulRequests.percent.is(100))
 }
