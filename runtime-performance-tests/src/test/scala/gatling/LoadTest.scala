@@ -109,13 +109,14 @@ class LoadTest extends Simulation {
       .exitHereIfFailed
   }
 
-  val pages:Int = 9
-  val limit:Int = 100
+  val pages: Int = 10
+  val page: Int = 100
+  val limit: Int = 100
 
   object GraphQL {
-    val tasks: ChainBuilder = repeat(pages, "i") {
+    val tasks: ChainBuilder = repeat(pages - 1, "i") {
       exec(session => {
-         session.set("page", Random.nextInt(100)+1) // session("i").as[Int]+1)
+         session.set("page", Random.nextInt(page)+1)
                 .set("limit", limit)
                 .set("domain", Config.domain)
                 .set("access_token", access_token)
