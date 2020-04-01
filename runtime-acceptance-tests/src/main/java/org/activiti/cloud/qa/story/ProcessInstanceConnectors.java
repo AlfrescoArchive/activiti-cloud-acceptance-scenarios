@@ -16,18 +16,22 @@
 
 package org.activiti.cloud.qa.story;
 
+import static org.activiti.api.process.model.events.IntegrationEvent.IntegrationEvents.INTEGRATION_ERROR_RECEIVED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.awaitility.Awaitility.await;
 
 import java.util.Collection;
 
+import org.activiti.cloud.acc.core.steps.audit.AuditSteps;
 import org.activiti.cloud.acc.core.steps.query.ProcessQuerySteps;
 import org.activiti.cloud.acc.core.steps.runtime.ProcessRuntimeBundleSteps;
 import org.activiti.cloud.acc.core.steps.runtime.ProcessVariablesRuntimeBundleSteps;
 import org.activiti.cloud.acc.shared.steps.VariableBufferSteps;
 import org.activiti.cloud.api.model.shared.CloudVariableInstance;
+import org.activiti.cloud.api.model.shared.events.CloudRuntimeEvent;
 import org.activiti.cloud.api.process.model.CloudProcessInstance;
+import org.activiti.cloud.api.process.model.events.CloudIntegrationErrorReceivedEvent;
 import org.activiti.cloud.api.task.model.CloudTask;
 import org.jbehave.core.annotations.Given;
 import org.jbehave.core.annotations.Then;
@@ -50,6 +54,9 @@ public class ProcessInstanceConnectors {
 
     @Steps
     private ProcessQuerySteps processQuerySteps;
+
+    @Steps
+    private AuditSteps auditSteps;
 
     private CloudProcessInstance processInstance;
 
@@ -119,6 +126,29 @@ public class ProcessInstanceConnectors {
         processQuerySteps.checkProcessInstanceHasVariableValue(processInstanceId,
                                                                variableName,
                                                                variableValue);
+    }
+
+    @Then("integration error event is emitted for the process")
+    public void verifyIntegrationEventsForProcesses() throws Exception {
+
+        String processId = Serenity.sessionVariableCalled("processInstanceId");
+
+        await().untilAsserted(() -> {
+            Collection<CloudRuntimeEvent> events = auditSteps.getEventsByProcessInstanceId(processId);
+
+            assertThat(events)
+                    .filteredOn(CloudIntegrationErrorReceivedEvent.class::isInstance)
+                    .isNotEmpty()
+                    .extracting("eventType",
+                                "errorMessage",
+                                "errorClassName"
+                    )
+                    .containsExactly(
+                                     tuple(INTEGRATION_ERROR_RECEIVED,
+                                           "TestErrorConnector",
+                                           "java.lang.RuntimeException"
+                                     ));
+        });
     }
 
 }
